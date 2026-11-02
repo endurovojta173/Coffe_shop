@@ -126,6 +126,7 @@ export const en: Translations = {
     languageAuto: 'Automatic (by system)',
     languageCs: 'Čeština (Czech)',
     languageEn: 'English',
+    languageKo: '한국어 (Korean)',
     messagesTitle: 'Messages & Notifications',
     messagesSubtitle: 'Notification settings and cafe updates',
     notifyEvents: 'Alerts for new events and coffee tastings',

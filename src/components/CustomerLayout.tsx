@@ -94,10 +94,16 @@ export const CustomerLayout: React.FC = () => {
             <button
               type="button"
               onClick={toggleLanguage}
-              title={language === 'cs' ? 'Switch to English' : 'Přepnout do češtiny'}
+              title={
+                language === 'cs'
+                  ? 'Switch to English'
+                  : language === 'en'
+                  ? '한국어로 변경 (Switch to Korean)'
+                  : 'Přepnout do češtiny (Switch to Czech)'
+              }
               className="px-2.5 py-1 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer"
             >
-              {language === 'cs' ? 'EN' : 'CZ'}
+              {language === 'cs' ? 'EN' : language === 'en' ? 'KO' : 'CZ'}
             </button>
 
             {!isInstalled && (
@@ -198,7 +204,13 @@ export const CustomerLayout: React.FC = () => {
             <button
               type="button"
               onClick={toggleLanguage}
-              title={language === 'cs' ? 'Switch to English' : 'Přepnout do češtiny'}
+              title={
+                language === 'cs'
+                  ? 'Switch to English'
+                  : language === 'en'
+                  ? '한국어로 변경 (Switch to Korean)'
+                  : 'Přepnout do češtiny (Switch to Czech)'
+              }
               className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer flex items-center gap-1.5"
             >
               <Globe className="w-3.5 h-3.5 text-[#D89D60]" />

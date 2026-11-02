@@ -124,6 +124,7 @@ export const cs = {
     languageAuto: 'Automaticky (podle systému)',
     languageCs: 'Čeština (Czech)',
     languageEn: 'English (Angličtina)',
+    languageKo: '한국어 (Jihokorejština)',
     messagesTitle: 'Zprávy a upozornění',
     messagesSubtitle: 'Nastavení notifikací a aktuality z kavárny',
     notifyEvents: 'Upozornění na nové akce a ochutnávky',
