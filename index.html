@@ -20,6 +20,17 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap"
       rel="stylesheet"
     />
+    <script>
+      window.__pwaInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__pwaInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));
+      });
+      window.addEventListener('appinstalled', function() {
+        window.__pwaInstallPrompt = null;
+      });
+    </script>
     <title>U Sousedů – Rodinná kavárna & Věrnostní program</title>
   </head>
   <body class="bg-[#1C140D] text-[#F5EBE1] antialiased selection:bg-[#D89D60] selection:text-[#1C140D]">

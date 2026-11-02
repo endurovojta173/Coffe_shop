@@ -6,6 +6,7 @@ import {
   Info,
   MoreVertical,
   PlusSquare,
+  RefreshCw,
   Share2,
   Smartphone,
   X,
@@ -16,8 +17,19 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+declare global {
+  interface Window {
+    __pwaInstallPrompt?: BeforeInstallPromptEvent | null;
+  }
+}
+
 export function usePwaInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    if (typeof window !== 'undefined' && window.__pwaInstallPrompt) {
+      return window.__pwaInstallPrompt;
+    }
+    return null;
+  });
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
@@ -37,28 +49,61 @@ export function usePwaInstall() {
     setIsIos(iosDevice);
     setIsAndroid(androidDevice);
 
+    // Pokud už existuje prompt zachycený v index.html před hydratací Reactu
+    if (window.__pwaInstallPrompt) {
+      setDeferredPrompt(window.__pwaInstallPrompt);
+    }
+
+    const handlePromptReady = () => {
+      if (window.__pwaInstallPrompt) {
+        setDeferredPrompt(window.__pwaInstallPrompt);
+      }
+    };
+
     // Zachycení nativního instalačního promptu pro Android / Chromium
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      window.__pwaInstallPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      window.__pwaInstallPrompt = null;
+      setDeferredPrompt(null);
+      setIsStandalone(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('pwa-prompt-ready', handlePromptReady);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwa-prompt-ready', handlePromptReady);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const triggerInstall = async (): Promise<'accepted' | 'dismissed' | 'unavailable'> => {
-    if (!deferredPrompt) {
+    const prompt = deferredPrompt || (typeof window !== 'undefined' ? window.__pwaInstallPrompt : null);
+    if (!prompt) {
       return 'unavailable';
     }
-    await deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      setDeferredPrompt(null);
+    try {
+      await prompt.prompt();
+      const choice = await prompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setDeferredPrompt(null);
+        if (typeof window !== 'undefined') {
+          window.__pwaInstallPrompt = null;
+        }
+      }
+      return choice.outcome;
+    } catch (err) {
+      console.warn('Install prompt error:', err);
+      return 'unavailable';
     }
-    return choice.outcome;
   };
 
   return {
@@ -81,7 +126,12 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
 }) => {
   const { deferredPrompt, isStandalone, isIos, triggerInstall } = usePwaInstall();
   const [activeTab, setActiveTab] = useState<'android' | 'ios'>(isIos ? 'ios' : 'android');
-  const [installStatus, setInstallStatus] = useState<string | null>(null);
+  const [isTriggering, setIsTriggering] = useState(false);
+  const [showManualSteps, setShowManualSteps] = useState(false);
+  const [statusFeedback, setStatusFeedback] = useState<{
+    type: 'success' | 'dismissed' | 'manual';
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isIos) {
@@ -92,17 +142,45 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
   if (!isOpen) return null;
 
   const handleAndroidClick = async () => {
-    setInstallStatus(null);
-    if (deferredPrompt) {
+    setIsTriggering(true);
+    setStatusFeedback(null);
+
+    const hasPrompt = Boolean(deferredPrompt || (typeof window !== 'undefined' && window.__pwaInstallPrompt));
+
+    if (hasPrompt) {
       const outcome = await triggerInstall();
+      setIsTriggering(false);
       if (outcome === 'accepted') {
-        setInstallStatus('Instalace proběhla úspěšně!');
-        setTimeout(onClose, 2000);
+        setStatusFeedback({
+          type: 'success',
+          message: 'Instalace potvrzena! Aplikace se přidává na vaši plochu.',
+        });
+        setTimeout(onClose, 2500);
+      } else if (outcome === 'dismissed') {
+        setStatusFeedback({
+          type: 'dismissed',
+          message: 'Instalace byla zrušena. Můžete ji zkusit kdykoliv znovu.',
+        });
+      } else {
+        // unavailable fallback
+        setStatusFeedback({
+          type: 'manual',
+          message: 'Prohlížeč nepovolil otevření dialogu. Postupujte podle návodu níže.',
+        });
+        setShowManualSteps(true);
       }
     } else {
-      setInstallStatus('prompt_unavailable');
+      // Prompt nebyl prohlížečem vydán (Chrome ho potlačil nebo zablokoval)
+      setIsTriggering(false);
+      setStatusFeedback({
+        type: 'manual',
+        message: 'Prohlížeč nepovolil automatické otevření dialogu. Nainstalujte aplikaci během 3 vteřin přes menu Chrome.',
+      });
+      setShowManualSteps(true);
     }
   };
+
+  const isPromptReady = Boolean(deferredPrompt || (typeof window !== 'undefined' && window.__pwaInstallPrompt));
 
   return (
     <div
@@ -176,39 +254,102 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
         {/* Obsah záložky: Android */}
         {activeTab === 'android' && (
           <div className="space-y-4">
+            {/* Stav detekce nativního promptu */}
+            <div className="flex items-center justify-between text-xs px-1">
+              <span className="text-[#A39284]">Režim instalace:</span>
+              {isPromptReady ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Rychlá instalace na 1 klik
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#221912] text-[#D89D60] border border-[#3E3025] text-[11px] font-medium">
+                  <Info className="w-3.5 h-3.5" />
+                  Přes menu Chrome (⋮)
+                </span>
+              )}
+            </div>
+
+            {/* Hlavní tlačítko */}
             <button
               type="button"
               onClick={() => void handleAndroidClick()}
-              className="w-full py-3.5 px-6 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-[#D89D60]/20 transition cursor-pointer"
+              disabled={isTriggering}
+              className="w-full py-3.5 px-6 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] active:scale-[0.98] text-[#1C140D] font-bold text-sm flex items-center justify-center gap-2.5 shadow-lg shadow-[#D89D60]/20 transition cursor-pointer disabled:opacity-75"
             >
               <Download className="w-4 h-4" />
-              <span>Nainstalovat aplikaci (Android)</span>
+              <span>
+                {isTriggering
+                  ? 'Otevírám dialog...'
+                  : isPromptReady
+                    ? 'Nainstalovat aplikaci do mobilu'
+                    : 'Spustit instalaci aplikace'}
+              </span>
             </button>
 
-            {installStatus === 'Instalace proběhla úspěšně!' && (
-              <div className="p-3.5 rounded-2xl bg-[#D89D60]/15 border border-[#D89D60] text-xs text-[#F5EBE1] flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#D89D60]" />
-                <span>{installStatus}</span>
+            {/* Zpětná vazba po stisku tlačítka */}
+            {statusFeedback?.type === 'success' && (
+              <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/50 text-xs text-emerald-300 flex items-center gap-2.5 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{statusFeedback.message}</span>
               </div>
             )}
 
-            {/* Vysvětlení hlášky "Aplikace je již nainstalována" na Androidu */}
-            <div className="p-4 rounded-2xl bg-[#221912] border border-[#3E3025] space-y-2.5 text-xs text-[#A39284] leading-relaxed">
-              <div className="flex items-center gap-2 text-[#D89D60] font-semibold">
-                <Info className="w-4 h-4 shrink-0" />
-                <span>Píše vám Android, že je aplikace již nainstalována?</span>
+            {statusFeedback?.type === 'dismissed' && (
+              <div className="p-3.5 rounded-2xl bg-[#221912] border border-[#3E3025] text-xs text-[#A39284] flex items-center gap-2.5 animate-in fade-in">
+                <Info className="w-4 h-4 text-[#D89D60] shrink-0" />
+                <span>{statusFeedback.message}</span>
+              </div>
+            )}
+
+            {/* Detailní manuální postup při zablokování automatického dialogu */}
+            {(showManualSteps || !isPromptReady || statusFeedback?.type === 'manual') && (
+              <div className="p-4 rounded-2xl bg-[#D89D60]/10 border-2 border-[#D89D60] text-xs text-[#F5EBE1] space-y-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 text-[#D89D60] font-bold text-sm">
+                  <Info className="w-4 h-4 shrink-0" />
+                  <span>Jak nainstalovat přes prohlížeč Chrome:</span>
+                </div>
+                <p className="text-xs text-[#A39284] leading-relaxed">
+                  Chrome na Androidu potlačuje automatické vyskakování okna, pokud už aplikaci eviduje na ploše nebo v paměti. Můžete ji však kdykoliv nainstalovat přímo:
+                </p>
+                <div className="space-y-2 pt-1 font-medium text-xs">
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#1C140D] border border-[#3E3025]">
+                    <span className="w-6 h-6 rounded-full bg-[#D89D60] text-[#1C140D] font-bold text-xs flex items-center justify-center shrink-0">
+                      1
+                    </span>
+                    <span className="leading-snug">
+                      Vpravo nahoře v prohlížeči klepněte na <strong>tři tečky (<MoreVertical className="w-3.5 h-3.5 inline text-[#D89D60]" />)</strong>.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#1C140D] border border-[#3E3025]">
+                    <span className="w-6 h-6 rounded-full bg-[#D89D60] text-[#1C140D] font-bold text-xs flex items-center justify-center shrink-0">
+                      2
+                    </span>
+                    <span className="leading-snug">
+                      Zvolte <strong>„Nainstalovat aplikaci“</strong> (nebo <strong>„Přidat na plochu“</strong>).
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#1C140D] border border-[#3E3025]">
+                    <span className="w-6 h-6 rounded-full bg-[#D89D60] text-[#1C140D] font-bold text-xs flex items-center justify-center shrink-0">
+                      3
+                    </span>
+                    <span className="leading-snug">
+                      Potvrďte tlačítkem <strong>„Nainstalovat“</strong>.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Informace o hlášce "Již nainstalována" */}
+            <div className="p-4 rounded-2xl bg-[#221912] border border-[#3E3025] space-y-2 text-xs text-[#A39284] leading-relaxed">
+              <div className="flex items-center gap-2 text-[#F5EBE1] font-semibold">
+                <RefreshCw className="w-3.5 h-3.5 text-[#D89D60]" />
+                <span>Píše vám telefon, že je aplikace již nainstalována?</span>
               </div>
               <p>
-                To se stává, když jste si dříve přidali zástupce na plochu nebo ji Chrome má v paměti:
+                Pokud máte na ploše zástupce, stačí jej smazat (odinstalovat) a přidat znovu, nebo otevřít přímo z plochy s novou kávovou ikonou.
               </p>
-              <ol className="list-decimal pl-4 space-y-1.5 text-[#F5EBE1]">
-                <li>
-                  <strong>Zkontrolujte plochu telefonu:</strong> Vyhledejte ikonu s šálkem kávy a názvem <em>„U Sousedů“</em>. Pokud ji tam máte, můžete ji rovnou otevřít!
-                </li>
-                <li>
-                  <strong>Ruční přidání přes menu Chrome:</strong> V prohlížeči Chrome klepněte vpravo nahoře na <strong>tři tečky (<MoreVertical className="w-3.5 h-3.5 inline text-[#D89D60]" />)</strong> a vyberte <strong>„Nainstalovat aplikaci“</strong> nebo <strong>„Přidat na plochu“</strong>.
-                </li>
-              </ol>
             </div>
           </div>
         )}
@@ -273,7 +414,7 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
 
             <div className="p-3 rounded-2xl bg-[#D89D60]/10 border border-[#D89D60]/40 text-xs text-[#D89D60] flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Aplikace se vám uloží na plochu s vlastní ikonou a otevře se na celou obrazovku bez lišt prohlížeče.</span>
+              <span>Aplikace se vám uloží na plochu s vlastní ikonou kávového zrnka a poběží na celou obrazovku.</span>
             </div>
           </div>
         )}
