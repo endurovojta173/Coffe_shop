@@ -23,6 +23,23 @@ declare global {
   }
 }
 
+function checkIsStandalone(): boolean {
+  if (typeof window === 'undefined') return false;
+  const isMatchMedia =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches;
+  // @ts-expect-error iOS Safari navigator.standalone
+  const isIosStandalone = window.navigator.standalone === true;
+  const isUrlPwa =
+    window.location.search.includes('source=pwa') ||
+    window.location.hash.includes('source=pwa');
+  const isReferrerAndroidApp =
+    typeof document !== 'undefined' && document.referrer.startsWith('android-app://');
+
+  return Boolean(isMatchMedia || isIosStandalone || isUrlPwa || isReferrerAndroidApp);
+}
+
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
     if (typeof window !== 'undefined' && window.__pwaInstallPrompt) {
@@ -30,17 +47,34 @@ export function usePwaInstall() {
     }
     return null;
   });
-  const [isStandalone, setIsStandalone] = useState(false);
+
+  const [isStandalone, setIsStandalone] = useState<boolean>(() => checkIsStandalone());
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => {
+    if (checkIsStandalone()) return true;
+    if (typeof window !== 'undefined') {
+      try {
+        return localStorage.getItem('pwa_installed') === 'true';
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
   const [isIos, setIsIos] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Detekce standalone režimu (aplikace už běží nainstalovaná na ploše)
-    const standaloneMode =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      // @ts-expect-error iOS Safari navigator.standalone
-      window.navigator.standalone === true;
+    const standaloneMode = checkIsStandalone();
     setIsStandalone(standaloneMode);
+    if (standaloneMode) {
+      setIsInstalled(true);
+      try {
+        localStorage.setItem('pwa_installed', 'true');
+      } catch {
+        // ignore
+      }
+    }
 
     // Detekce OS
     const ua = window.navigator.userAgent.toLowerCase();
@@ -48,6 +82,26 @@ export function usePwaInstall() {
     const androidDevice = /android/.test(ua);
     setIsIos(iosDevice);
     setIsAndroid(androidDevice);
+
+    // Kontrola instalovaných aplikací přes Chrome getInstalledRelatedApps API
+    if ('getInstalledRelatedApps' in navigator) {
+      // @ts-expect-error getInstalledRelatedApps
+      navigator
+        .getInstalledRelatedApps()
+        .then((relatedApps: unknown[]) => {
+          if (Array.isArray(relatedApps) && relatedApps.length > 0) {
+            setIsInstalled(true);
+            try {
+              localStorage.setItem('pwa_installed', 'true');
+            } catch {
+              // ignore
+            }
+          }
+        })
+        .catch(() => {
+          // API not available or rejected
+        });
+    }
 
     // Pokud už existuje prompt zachycený v index.html před hydratací Reactu
     if (window.__pwaInstallPrompt) {
@@ -66,12 +120,27 @@ export function usePwaInstall() {
       const promptEvent = e as BeforeInstallPromptEvent;
       window.__pwaInstallPrompt = promptEvent;
       setDeferredPrompt(promptEvent);
+      // Pokud prohlížeč nabízí instalaci, aplikace není spuštěna jako standalone a nebyla dosud nainstalována
+      if (!checkIsStandalone()) {
+        setIsInstalled(false);
+        try {
+          localStorage.removeItem('pwa_installed');
+        } catch {
+          // ignore
+        }
+      }
     };
 
     const handleAppInstalled = () => {
       window.__pwaInstallPrompt = null;
       setDeferredPrompt(null);
       setIsStandalone(true);
+      setIsInstalled(true);
+      try {
+        localStorage.setItem('pwa_installed', 'true');
+      } catch {
+        // ignore
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
@@ -95,6 +164,12 @@ export function usePwaInstall() {
       const choice = await prompt.userChoice;
       if (choice.outcome === 'accepted') {
         setDeferredPrompt(null);
+        setIsInstalled(true);
+        try {
+          localStorage.setItem('pwa_installed', 'true');
+        } catch {
+          // ignore
+        }
         if (typeof window !== 'undefined') {
           window.__pwaInstallPrompt = null;
         }
@@ -109,6 +184,7 @@ export function usePwaInstall() {
   return {
     deferredPrompt,
     isStandalone,
+    isInstalled,
     isIos,
     isAndroid,
     triggerInstall,

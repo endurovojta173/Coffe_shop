@@ -13,11 +13,12 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { LoyaltyCardContent } from './LoyaltyCardModal';
-import { InstallPwaModal } from './InstallPwaModal';
+import { InstallPwaModal, usePwaInstall } from './InstallPwaModal';
 import { CoffeeBeanIcon } from './CoffeeBeanIcon';
 
 export const CustomerLayout: React.FC = () => {
   const { currentUser, isCardModalOpen, setCardModalOpen } = useAppState();
+  const { isInstalled } = usePwaInstall();
   const [isInstallModalOpen, setInstallModalOpen] = useState(false);
   const location = useLocation();
 
@@ -87,15 +88,17 @@ export const CustomerLayout: React.FC = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setInstallModalOpen(true)}
-              title="Instalovat aplikaci do mobilu"
-              className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#D89D60] flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Instalovat</span>
-            </button>
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={() => setInstallModalOpen(true)}
+                title="Instalovat aplikaci do mobilu"
+                className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#D89D60] flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Instalovat</span>
+              </button>
+            )}
 
             <Link
               to="/app/account"
@@ -180,14 +183,16 @@ export const CustomerLayout: React.FC = () => {
 
           {/* CTA Moje kartička + Instalovat + Pozdrav uživatele */}
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setInstallModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5 text-[#D89D60]" />
-              <span>Instalovat aplikaci</span>
-            </button>
+            {!isInstalled && (
+              <button
+                type="button"
+                onClick={() => setInstallModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-[#D89D60]" />
+                <span>Instalovat aplikaci</span>
+              </button>
+            )}
 
             <button
               type="button"

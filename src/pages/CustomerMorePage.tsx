@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Bell,
+  CheckCircle2,
   Coffee,
   Download,
   Heart,
@@ -9,10 +10,11 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
-import { InstallPwaModal } from '../components/InstallPwaModal';
+import { InstallPwaModal, usePwaInstall } from '../components/InstallPwaModal';
 
 export const CustomerMorePage: React.FC = () => {
   const { currentUser, messages, updateCurrentUserProfile } = useAppState();
+  const { isInstalled } = usePwaInstall();
   const [isInstallOpen, setIsInstallOpen] = useState(false);
 
   const notifyEvents = currentUser?.notify_events ?? true;
@@ -106,14 +108,21 @@ export const CustomerMorePage: React.FC = () => {
               bleskově i bez čekání na otevírání prohlížeče.
             </p>
 
-            <button
-              type="button"
-              onClick={() => setIsInstallOpen(true)}
-              className="w-full py-3 px-5 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#D89D60]/20 transition cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>Nainstalovat aplikaci do mobilu</span>
-            </button>
+            {isInstalled ? (
+              <div className="w-full py-3 px-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Aplikace je nainstalována na tomto zařízení</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsInstallOpen(true)}
+                className="w-full py-3 px-5 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#D89D60]/20 transition cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Nainstalovat aplikaci do mobilu</span>
+              </button>
+            )}
           </section>
 
           {/* Karta Zprávy a upozornění */}
