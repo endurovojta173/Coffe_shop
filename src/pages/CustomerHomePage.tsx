@@ -12,6 +12,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CAFE_BRANCHES } from '../lib/branches';
 
 function formatCzechEventDate(isoString: string): { date: string; time: string } {
@@ -35,6 +36,7 @@ function formatCzechEventDate(isoString: string): { date: string; time: string }
 
 export const CustomerHomePage: React.FC = () => {
   const { currentUser, events, setCardModalOpen } = useAppState();
+  const { t } = useLanguage();
 
   const coffeeCount = currentUser?.coffee_count ?? 7;
   const cardNumber = currentUser?.card_number ?? '0042 1187';
@@ -46,10 +48,10 @@ export const CustomerHomePage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <span className="text-xs uppercase tracking-widest text-[#D89D60] font-semibold">
-            Váš sousedský přehled
+            {t('common.appName')}
           </span>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1">
-            Vítejte v kavárně U Sousedů
+          <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1 font-serif-heading">
+            {t('auth.loginSubtitle')}
           </h1>
         </div>
         <Link
@@ -57,7 +59,7 @@ export const CustomerHomePage: React.FC = () => {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#2D221A] hover:border-[#D89D60] border border-[#3E3025] text-sm font-medium text-[#F5EBE1] transition self-start sm:self-auto"
         >
           <UtensilsCrossed className="w-4 h-4 text-[#D89D60]" />
-          <span>Prohlédnout denní nabídku</span>
+          <span>{t('menu.title')}</span>
         </Link>
       </div>
 
@@ -71,18 +73,20 @@ export const CustomerHomePage: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#221912] border border-[#3E3025] text-[#D89D60] text-xs font-semibold mb-2">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Každá 10. káva zdarma!</span>
+                <span>{t('home.loyaltySubtitle')}</span>
               </div>
-              <h2 className="text-2xl font-bold text-[#F5EBE1]">Věrnostní karta</h2>
+              <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">{t('home.loyaltyTitle')}</h2>
               <p className="text-xs text-[#A39284] mt-0.5 font-mono">
-                Karta č. {cardNumber}
+                {t('card.cardNumber')}: {cardNumber}
               </p>
             </div>
             <div className="text-right bg-[#221912] border border-[#3E3025] px-4 py-2.5 rounded-2xl">
               <span className="text-2xl font-bold text-[#D89D60] block leading-none">
                 {coffeeCount}/10
               </span>
-              <span className="text-[11px] text-[#A39284]">nasbíráno</span>
+              <span className="text-[11px] text-[#A39284]">
+                {coffeeCount === 10 ? '✓' : `${10 - coffeeCount} left`}
+              </span>
             </div>
           </div>
 
@@ -132,11 +136,9 @@ export const CustomerHomePage: React.FC = () => {
               />
             </div>
             <p className="text-xs text-[#A39284] mt-2.5">
-              {remaining <= 1
-                ? 'Už příští šálek kávy máte od nás jako odměnu zdarma!'
-                : `Zbývají ještě ${remaining} ${
-                    remaining < 5 ? 'kávy' : 'káv'
-                  } do vaší odměny zdarma.`}
+              {remaining === 0
+                ? t('home.freeCoffeeReady')
+                : t('home.rewardsProgress', { count: remaining })}
             </p>
           </div>
 
@@ -146,14 +148,14 @@ export const CustomerHomePage: React.FC = () => {
               className="flex-1 py-3.5 px-5 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#D89D60]/20 transition"
             >
               <QrCode className="w-4 h-4" />
-              <span>Zobrazit QR kartičku</span>
+              <span>{t('card.title')}</span>
             </Link>
             <button
               type="button"
               onClick={() => setCardModalOpen(true)}
               className="hidden md:inline-flex py-3.5 px-5 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] items-center justify-center transition cursor-pointer"
             >
-              Rychlý náhled
+              {t('home.openCardDetail')}
             </button>
           </div>
         </section>
@@ -164,8 +166,8 @@ export const CustomerHomePage: React.FC = () => {
           <section>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-[#F5EBE1]">
-                  Nadcházející akce
+                <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">
+                  {t('home.eventsTitle')}
                 </h2>
                 <p className="text-xs text-[#A39284]">
                   Kulturní večery, cuppingy a sousedská setkání
@@ -220,7 +222,9 @@ export const CustomerHomePage: React.FC = () => {
           {/* Sekce Naše pobočky */}
           <section>
             <div className="mb-4">
-              <h2 className="text-2xl font-bold text-[#F5EBE1]">Naše pobočky</h2>
+              <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">
+                {t('home.locationsTitle')}
+              </h2>
               <p className="text-xs text-[#A39284]">
                 Zastavte se u nás na šálek výběrové kávy nebo domácí dezert
               </p>

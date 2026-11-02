@@ -12,6 +12,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CustomerAccountPage: React.FC = () => {
   const {
@@ -21,6 +22,7 @@ export const CustomerAccountPage: React.FC = () => {
     deleteCurrentUserAccount,
     logout,
   } = useAppState();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -94,13 +96,13 @@ export const CustomerAccountPage: React.FC = () => {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <span className="text-xs uppercase tracking-widest text-[#D89D60] font-semibold">
-          Správa profilu
+          {t('common.appName')}
         </span>
-        <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1">
-          Můj účet
+        <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1 font-serif-heading">
+          {t('account.title')}
         </h1>
         <p className="text-sm text-[#A39284] mt-1">
-          Přehled vašich přihlašovacích údajů a nastavení věrnostního účtu
+          {t('account.subtitle')}
         </p>
       </div>
 

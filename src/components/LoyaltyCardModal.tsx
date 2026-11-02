@@ -1,6 +1,7 @@
 import React from 'react';
 import { Coffee, QrCode, Sparkles, Star } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LoyaltyCardContentProps {
   fullName: string;
@@ -13,6 +14,7 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
   cardNumber,
   coffeeCount,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
       {/* Dekorativní kávový odlesk */}
@@ -21,13 +23,13 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#221912] border border-[#3E3025] text-[#D89D60] text-xs font-medium mb-3">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Věrnostní program U Sousedů</span>
+          <span>{t('home.loyaltySubtitle')}</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#F5EBE1] tracking-tight">
-          Moje kartička
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#F5EBE1] tracking-tight font-serif-heading">
+          {t('card.title')}
         </h2>
         <p className="text-sm text-[#A39284] mt-1">
-          Ukažte tento QR kód obsluze u pokladny při objednávce
+          {t('card.subtitle')}
         </p>
       </div>
 
@@ -45,7 +47,7 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
       {/* Číslo kartičky a majitel */}
       <div className="mt-6 text-center">
         <p className="text-xs uppercase tracking-widest text-[#A39284] mb-1">
-          Číslo věrnostní karty
+          {t('card.cardNumber')}
         </p>
         <p className="font-mono text-2xl sm:text-3xl font-bold tracking-[0.2em] text-[#D89D60]">
           {cardNumber}
@@ -56,9 +58,9 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
       {/* Stav bodů */}
       <div className="mt-6 pt-6 border-t border-[#3E3025]">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-[#A39284]">Aktuální stav káv</span>
+          <span className="text-sm text-[#A39284]">{t('account.coffeeCountLabel')}</span>
           <span className="text-sm font-semibold text-[#D89D60]">
-            {coffeeCount} / 10 káv
+            {coffeeCount} / 10
           </span>
         </div>
 
@@ -94,14 +96,8 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
           <QrCode className="w-4 h-4 text-[#D89D60] shrink-0" />
           <span>
             {coffeeCount >= 9
-              ? 'Příští káva je vaše 10. – máte ji od nás ZDARMA!'
-              : `Ještě ${10 - coffeeCount} ${
-                  10 - coffeeCount === 1
-                    ? 'káva'
-                    : 10 - coffeeCount < 5
-                    ? 'kávy'
-                    : 'káv'
-                } a 10. šálek máte zdarma!`}
+              ? t('home.freeCoffeeReady')
+              : t('home.rewardsProgress', { count: 10 - coffeeCount })}
           </span>
         </div>
       </div>

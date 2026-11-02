@@ -11,6 +11,7 @@ import {
   Smartphone,
   X,
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -201,6 +202,7 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
   onClose,
 }) => {
   const { deferredPrompt, isStandalone, isIos, triggerInstall } = usePwaInstall();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'android' | 'ios'>(isIos ? 'ios' : 'android');
   const [isTriggering, setIsTriggering] = useState(false);
   const [showManualSteps, setShowManualSteps] = useState(false);
@@ -281,11 +283,11 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
             <Download className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#F5EBE1]">
-              Nainstalovat aplikaci do mobilu
+            <h2 className="text-xl sm:text-2xl font-bold text-[#F5EBE1] font-serif-heading">
+              {t('installModal.modalTitle')}
             </h2>
             <p className="text-xs text-[#A39284]">
-              Kavárna U Sousedů • Rychlý přístup z plochy
+              {t('installModal.modalSubtitle')}
             </p>
           </div>
         </div>
@@ -294,7 +296,7 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
           <div className="mb-6 p-4 rounded-2xl bg-[#D89D60]/20 border border-[#D89D60] text-xs text-[#F5EBE1] flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-[#D89D60] shrink-0" />
             <span>
-              Aplikace je již na tomto zařízení spuštěna jako plnohodnotná nainstalovaná PWA.
+              {t('installModal.standaloneBanner')}
             </span>
           </div>
         )}
@@ -311,7 +313,7 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
             }`}
           >
             <Smartphone className="w-4 h-4" />
-            <span>Android</span>
+            <span>{t('installModal.tabAndroid')}</span>
           </button>
           <button
             type="button"
@@ -323,7 +325,7 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
             }`}
           >
             <Apple className="w-4 h-4" />
-            <span>iPhone (iOS)</span>
+            <span>{t('installModal.tabIos')}</span>
           </button>
         </div>
 
@@ -332,16 +334,16 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
           <div className="space-y-4">
             {/* Stav detekce nativního promptu */}
             <div className="flex items-center justify-between text-xs px-1">
-              <span className="text-[#A39284]">Režim instalace:</span>
+              <span className="text-[#A39284]">{t('installModal.modeLabel')}</span>
               {isPromptReady ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[11px] font-medium">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Rychlá instalace na 1 klik
+                  {t('installModal.readyBadge')}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#221912] text-[#D89D60] border border-[#3E3025] text-[11px] font-medium">
                   <Info className="w-3.5 h-3.5" />
-                  Přes menu Chrome (⋮)
+                  {t('installModal.menuBadge')}
                 </span>
               )}
             </div>
@@ -356,10 +358,10 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({
               <Download className="w-4 h-4" />
               <span>
                 {isTriggering
-                  ? 'Otevírám dialog...'
+                  ? t('installModal.openingDialog')
                   : isPromptReady
-                    ? 'Nainstalovat aplikaci do mobilu'
-                    : 'Spustit instalaci aplikace'}
+                    ? t('installModal.installButton')
+                    : t('installModal.tryInstallButton')}
               </span>
             </button>
 

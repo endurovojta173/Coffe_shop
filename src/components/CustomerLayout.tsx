@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Download,
+  Globe,
   Home,
   MoreHorizontal,
   QrCode,
@@ -15,10 +16,12 @@ import { useAppState } from '../context/AppStateContext';
 import { LoyaltyCardContent } from './LoyaltyCardModal';
 import { InstallPwaModal, usePwaInstall } from './InstallPwaModal';
 import { CoffeeBeanIcon } from './CoffeeBeanIcon';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CustomerLayout: React.FC = () => {
   const { currentUser, isCardModalOpen, setCardModalOpen } = useAppState();
   const { isInstalled } = usePwaInstall();
+  const { t, language, toggleLanguage } = useLanguage();
   const [isInstallModalOpen, setInstallModalOpen] = useState(false);
   const location = useLocation();
 
@@ -83,20 +86,29 @@ export const CustomerLayout: React.FC = () => {
               <span className="font-serif-heading text-lg font-bold tracking-tight text-[#F5EBE1] block leading-none">
                 U Sousedů
               </span>
-              <span className="text-[11px] text-[#A39284]">Rodinná kavárna</span>
+              <span className="text-[11px] text-[#A39284]">{t('common.tagline')}</span>
             </div>
           </Link>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              title={language === 'cs' ? 'Switch to English' : 'Přepnout do češtiny'}
+              className="px-2.5 py-1 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer"
+            >
+              {language === 'cs' ? 'EN' : 'CZ'}
+            </button>
+
             {!isInstalled && (
               <button
                 type="button"
                 onClick={() => setInstallModalOpen(true)}
-                title="Instalovat aplikaci do mobilu"
+                title={t('nav.installApp')}
                 className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#D89D60] flex items-center gap-1.5 transition cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Instalovat</span>
+                <span>{t('nav.install')}</span>
               </button>
             )}
 
@@ -141,7 +153,7 @@ export const CustomerLayout: React.FC = () => {
                 }`
               }
             >
-              Domů
+              {t('nav.home')}
             </NavLink>
             <NavLink
               to="/app/menu"
@@ -153,7 +165,7 @@ export const CustomerLayout: React.FC = () => {
                 }`
               }
             >
-              Nabídka
+              {t('nav.menu')}
             </NavLink>
             <NavLink
               to="/app/account"
@@ -165,7 +177,7 @@ export const CustomerLayout: React.FC = () => {
                 }`
               }
             >
-              Můj účet
+              {t('nav.account')}
             </NavLink>
             <NavLink
               to="/app/more"
@@ -177,12 +189,22 @@ export const CustomerLayout: React.FC = () => {
                 }`
               }
             >
-              Další
+              {t('nav.more')}
             </NavLink>
           </nav>
 
-          {/* CTA Moje kartička + Instalovat + Pozdrav uživatele */}
+          {/* CTA Moje kartička + Přepínač jazyka + Instalovat + Pozdrav uživatele */}
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              title={language === 'cs' ? 'Switch to English' : 'Přepnout do češtiny'}
+              className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer flex items-center gap-1.5"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#D89D60]" />
+              <span>{language.toUpperCase()}</span>
+            </button>
+
             {!isInstalled && (
               <button
                 type="button"
@@ -190,7 +212,7 @@ export const CustomerLayout: React.FC = () => {
                 className="px-4 py-2 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] flex items-center gap-1.5 transition cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-[#D89D60]" />
-                <span>Instalovat aplikaci</span>
+                <span>{t('nav.installApp')}</span>
               </button>
             )}
 
@@ -200,7 +222,7 @@ export const CustomerLayout: React.FC = () => {
               className="px-5 py-2.5 rounded-full bg-[#D89D60] hover:bg-[#e2aa70] text-[#1C140D] font-semibold text-sm flex items-center gap-2 shadow-lg shadow-[#D89D60]/20 transition cursor-pointer"
             >
               <QrCode className="w-4 h-4" />
-              <span>Moje kartička</span>
+              <span>{t('nav.myCardCta')}</span>
             </button>
 
             <Link
@@ -211,7 +233,7 @@ export const CustomerLayout: React.FC = () => {
                 {firstName.charAt(0).toUpperCase()}
               </div>
               <span className="text-sm font-medium text-[#F5EBE1]">
-                Ahoj, {greetingName}
+                {t('nav.greeting')}, {greetingName}
               </span>
             </Link>
           </div>
@@ -238,7 +260,7 @@ export const CustomerLayout: React.FC = () => {
             }
           >
             <Home className="w-5 h-5" />
-            <span>Domů</span>
+            <span>{t('nav.home')}</span>
           </NavLink>
 
           <NavLink
@@ -250,14 +272,14 @@ export const CustomerLayout: React.FC = () => {
             }
           >
             <UtensilsCrossed className="w-5 h-5" />
-            <span>Nabídka</span>
+            <span>{t('nav.menu')}</span>
           </NavLink>
 
           {/* Prostřední vyvýšené kruhové FAB tlačítko "Kartička" v barvě #D89D60 */}
           <div className="flex flex-col items-center justify-center relative -top-5">
             <Link
               to="/app/card"
-              aria-label="Moje kartička"
+              aria-label={t('nav.card')}
               className={`w-14 h-14 rounded-full bg-[#D89D60] text-[#1C140D] flex items-center justify-center shadow-xl shadow-black/50 border-4 border-[#1C140D] transition transform active:scale-95 ${
                 location.pathname === '/app/card' ? 'ring-2 ring-[#F5EBE1]' : ''
               }`}
@@ -269,7 +291,7 @@ export const CustomerLayout: React.FC = () => {
                 location.pathname === '/app/card' ? 'text-[#D89D60]' : 'text-[#F5EBE1]'
               }`}
             >
-              Kartička
+              {t('nav.card')}
             </span>
           </div>
 
@@ -282,7 +304,7 @@ export const CustomerLayout: React.FC = () => {
             }
           >
             <User className="w-5 h-5" />
-            <span>Můj účet</span>
+            <span>{t('nav.account')}</span>
           </NavLink>
 
           <NavLink
@@ -294,7 +316,7 @@ export const CustomerLayout: React.FC = () => {
             }
           >
             <MoreHorizontal className="w-5 h-5" />
-            <span>Další</span>
+            <span>{t('nav.more')}</span>
           </NavLink>
         </div>
       </nav>

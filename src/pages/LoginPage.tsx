@@ -5,6 +5,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Download,
+  Globe,
   Loader2,
   Lock,
   Mail,
@@ -13,6 +14,7 @@ import {
 import { useAppState } from '../context/AppStateContext';
 import { InstallPwaModal, usePwaInstall } from '../components/InstallPwaModal';
 import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
+import { useLanguage } from '../context/LanguageContext';
 
 type AuthMode = 'login' | 'register' | 'reset';
 
@@ -35,6 +37,7 @@ export const LoginPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isInstallOpen, setIsInstallOpen] = useState(false);
   const { isInstalled } = usePwaInstall();
+  const { t, language, toggleLanguage } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
@@ -202,53 +205,62 @@ export const LoginPage: React.FC = () => {
           )}
 
           <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-2xl">
-            {/* Přepínač režimu: Přihlášení / Registrace */}
-            <div className="grid grid-cols-2 p-1 rounded-full bg-[#221912] border border-[#3E3025] mb-6">
+            {/* Přepínač režimu: Přihlášení / Registrace + Jazyk */}
+            <div className="flex items-center justify-between mb-6 gap-3">
+              <div className="grid grid-cols-2 p-1 rounded-full bg-[#221912] border border-[#3E3025] flex-1 max-w-[260px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setError(null);
+                    setInfoMessage(null);
+                  }}
+                  className={`py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    mode === 'login'
+                      ? 'bg-[#D89D60] text-[#1C140D]'
+                      : 'text-[#A39284] hover:text-[#F5EBE1]'
+                  }`}
+                >
+                  {t('auth.loginTitle')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('register');
+                    setError(null);
+                    setInfoMessage(null);
+                  }}
+                  className={`py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    mode === 'register'
+                      ? 'bg-[#D89D60] text-[#1C140D]'
+                      : 'text-[#A39284] hover:text-[#F5EBE1]'
+                  }`}
+                >
+                  {t('auth.registerTitle')}
+                </button>
+              </div>
+
               <button
                 type="button"
-                onClick={() => {
-                  setMode('login');
-                  setError(null);
-                  setInfoMessage(null);
-                }}
-                className={`py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
-                  mode === 'login'
-                    ? 'bg-[#D89D60] text-[#1C140D]'
-                    : 'text-[#A39284] hover:text-[#F5EBE1]'
-                }`}
+                onClick={toggleLanguage}
+                title={language === 'cs' ? 'Switch to English' : 'Přepnout do češtiny'}
+                className="px-3 py-2 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer flex items-center gap-1.5 shrink-0"
               >
-                Přihlášení
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('register');
-                  setError(null);
-                  setInfoMessage(null);
-                }}
-                className={`py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
-                  mode === 'register'
-                    ? 'bg-[#D89D60] text-[#1C140D]'
-                    : 'text-[#A39284] hover:text-[#F5EBE1]'
-                }`}
-              >
-                Registrace
+                <Globe className="w-3.5 h-3.5 text-[#D89D60]" />
+                <span>{language.toUpperCase()}</span>
               </button>
             </div>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#F5EBE1]">
-                {mode === 'login' && 'Vítejte zpátky'}
-                {mode === 'register' && 'Vytvořit účet'}
-                {mode === 'reset' && 'Obnova hesla'}
+              <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">
+                {mode === 'login' && t('auth.loginTitle')}
+                {mode === 'register' && t('auth.registerTitle')}
+                {mode === 'reset' && t('auth.resetTitle')}
               </h2>
               <p className="text-sm text-[#A39284] mt-1">
-                {mode === 'login' &&
-                  'Zadejte svůj e-mail a heslo. Aplikace vás automaticky přesměruje podle vaší role.'}
-                {mode === 'register' &&
-                  'Založte si účet a získejte okamžitý přístup k digitální QR kartičce a výhodám.'}
-                {mode === 'reset' &&
-                  'Zadejte svůj e-mail a pošleme vám odkaz pro nastavení nového hesla.'}
+                {mode === 'login' && t('auth.loginSubtitle')}
+                {mode === 'register' && t('auth.registerSubtitle')}
+                {mode === 'reset' && t('auth.resetSubtitle')}
               </p>
             </div>
 
@@ -269,7 +281,7 @@ export const LoginPage: React.FC = () => {
               {mode === 'register' && (
                 <div>
                   <label className="block text-xs font-medium text-[#A39284] mb-1.5">
-                    Jméno a příjmení
+                    {t('auth.fullNameLabel')}
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-[#A39284] absolute left-4 top-1/2 -translate-y-1/2" />
@@ -277,7 +289,7 @@ export const LoginPage: React.FC = () => {
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Jana Nováková"
+                      placeholder={t('auth.fullNamePlaceholder')}
                       required
                       className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-sm text-[#F5EBE1] placeholder-[#A39284]/60 focus:outline-none focus:border-[#D89D60]"
                     />
@@ -287,7 +299,7 @@ export const LoginPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-medium text-[#A39284] mb-1.5">
-                  E-mailová adresa
+                  {t('auth.emailLabel')}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-[#A39284] absolute left-4 top-1/2 -translate-y-1/2" />
@@ -295,7 +307,7 @@ export const LoginPage: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="vas@email.cz"
+                    placeholder={t('auth.emailPlaceholder')}
                     required
                     className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-sm text-[#F5EBE1] placeholder-[#A39284]/60 focus:outline-none focus:border-[#D89D60]"
                   />
@@ -306,7 +318,7 @@ export const LoginPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-medium text-[#A39284]">
-                      Heslo
+                      {t('auth.passwordLabel')}
                     </label>
                     {mode === 'login' && (
                       <button
@@ -318,7 +330,7 @@ export const LoginPage: React.FC = () => {
                         }}
                         className="text-xs text-[#D89D60] hover:underline cursor-pointer"
                       >
-                        Zapomenuté heslo?
+                        {t('auth.forgotPasswordQuestion')}
                       </button>
                     )}
                   </div>
@@ -347,9 +359,9 @@ export const LoginPage: React.FC = () => {
                 ) : (
                   <>
                     <span>
-                      {mode === 'login' && 'Přihlásit se do účtu'}
-                      {mode === 'register' && 'Vytvořit účet'}
-                      {mode === 'reset' && 'Odeslat obnovovací odkaz'}
+                      {mode === 'login' && t('auth.loginButton')}
+                      {mode === 'register' && t('auth.registerButton')}
+                      {mode === 'reset' && t('auth.resetButton')}
                     </span>
                     <ArrowRight className="w-4 h-4" />
                   </>
@@ -363,14 +375,14 @@ export const LoginPage: React.FC = () => {
                 onClick={() => setMode('login')}
                 className="w-full mt-4 py-2.5 rounded-full border border-[#3E3025] text-xs text-[#A39284] hover:text-[#F5EBE1] transition cursor-pointer"
               >
-                Zpět na přihlášení
+                {t('auth.backToLogin')}
               </button>
             ) : (
               <>
                 <div className="relative my-6 flex items-center justify-center">
                   <div className="border-t border-[#3E3025] w-full" />
                   <span className="bg-[#2D221A] px-3 text-xs text-[#A39284] whitespace-nowrap">
-                    nebo pokračujte přes
+                    {t('auth.or')}
                   </span>
                   <div className="border-t border-[#3E3025] w-full" />
                 </div>
@@ -400,7 +412,7 @@ export const LoginPage: React.FC = () => {
                       d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.9C3.5 21.4 7.4 24 12 24z"
                     />
                   </svg>
-                  <span>Pokračovat přes účet Google</span>
+                  <span>{t('auth.googleLogin')}</span>
                 </button>
               </>
             )}
@@ -413,7 +425,7 @@ export const LoginPage: React.FC = () => {
                 className="hover:text-[#D89D60] underline inline-flex items-center gap-1.5 transition cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-[#D89D60]" />
-                <span>Nainstalovat aplikaci do mobilu (Android & iPhone)</span>
+                <span>{t('auth.installPromo')}</span>
               </button>
             </div>
           )}

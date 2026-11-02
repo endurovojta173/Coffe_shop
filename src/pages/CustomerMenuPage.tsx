@@ -1,9 +1,11 @@
 import React from 'react';
 import { Coffee, Sparkles, UtensilsCrossed } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CustomerMenuPage: React.FC = () => {
   const { categories, menuItems } = useAppState();
+  const { t } = useLanguage();
 
   const sortedCategories = [...categories].sort(
     (a, b) => a.sort_order - b.sort_order
@@ -18,11 +20,11 @@ export const CustomerMenuPage: React.FC = () => {
             <UtensilsCrossed className="w-3.5 h-3.5" />
             <span>Stálá i sezónní nabídka</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1]">
-            Nabídka kavárny
+          <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] font-serif-heading">
+            {t('menu.title')}
           </h1>
           <p className="text-sm text-[#A39284] mt-1">
-            Všechny kávy připravujeme i v bezkofeinové variantě nebo s rostlinným mlékem.
+            {t('menu.subtitle')}
           </p>
         </div>
 
@@ -60,7 +62,7 @@ export const CustomerMenuPage: React.FC = () => {
 
               {items.length === 0 ? (
                 <p className="text-sm text-[#A39284] italic py-4">
-                  V této kategorii momentálně nejsou žádné aktivní položky.
+                  {t('menu.emptyItems')}
                 </p>
               ) : (
                 <ul className="space-y-4">
@@ -77,7 +79,7 @@ export const CustomerMenuPage: React.FC = () => {
                         className="flex-1 border-b-2 border-dotted border-[#3E3025] mx-2 min-w-[24px]"
                       />
                       <span className="text-sm sm:text-base font-bold text-[#D89D60] whitespace-nowrap">
-                        {item.price} Kč
+                        {item.price} {t('common.currency')}
                       </span>
                     </li>
                   ))}

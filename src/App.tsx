@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { CoffeeBeanIcon } from './components/CoffeeBeanIcon';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { CustomerLayout } from './components/CustomerLayout';
 import { LoginPage } from './pages/LoginPage';
 import { CustomerHomePage } from './pages/CustomerHomePage';
@@ -56,82 +57,84 @@ const ProtectedRoute: React.FC<{
 
 export const App: React.FC = () => {
   return (
-    <AppStateProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <Routes>
-          {/* Výchozí přesměrování */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+    <LanguageProvider>
+      <AppStateProvider>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <Routes>
+            {/* Výchozí přesměrování */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Jednotná přihlašovací stránka pro všechny role */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+            {/* Jednotná přihlašovací stránka pro všechny role */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
-          {/* Zákaznická část (/app/*) – přístup pro customer, staff i admin */}
-          <Route
-            path="/app"
-            element={
-              <ProtectedRoute
-                allowedRoles={['customer', 'staff', 'admin']}
-                redirectTo="/login"
-              >
-                <CustomerLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/app/home" replace />} />
-            <Route path="home" element={<CustomerHomePage />} />
-            <Route path="menu" element={<CustomerMenuPage />} />
-            <Route path="card" element={<CustomerCardPage />} />
-            <Route path="account" element={<CustomerAccountPage />} />
-            <Route path="more" element={<CustomerMorePage />} />
-          </Route>
+            {/* Zákaznická část (/app/*) – přístup pro customer, staff i admin */}
+            <Route
+              path="/app"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['customer', 'staff', 'admin']}
+                  redirectTo="/login"
+                >
+                  <CustomerLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/app/home" replace />} />
+              <Route path="home" element={<CustomerHomePage />} />
+              <Route path="menu" element={<CustomerMenuPage />} />
+              <Route path="card" element={<CustomerCardPage />} />
+              <Route path="account" element={<CustomerAccountPage />} />
+              <Route path="more" element={<CustomerMorePage />} />
+            </Route>
 
-          {/* Rozhraní pro baristu (/scanner) – pouze role staff a admin */}
-          <Route
-            path="/scanner"
-            element={
-              <ProtectedRoute
-                allowedRoles={['staff', 'admin']}
-                redirectTo="/login"
-              >
-                <ScannerPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Rozhraní pro baristu (/scanner) – pouze role staff a admin */}
+            <Route
+              path="/scanner"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['staff', 'admin']}
+                  redirectTo="/login"
+                >
+                  <ScannerPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Administrace (/admin/*) – pouze role admin */}
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute
-                allowedRoles={['admin']}
-                redirectTo="/login"
-              >
-                <AdminDashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/menu"
-            element={
-              <ProtectedRoute
-                allowedRoles={['admin']}
-                redirectTo="/login"
-              >
-                <AdminMenuPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={<Navigate to="/admin/dashboard" replace />}
-          />
+            {/* Administrace (/admin/*) – pouze role admin */}
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['admin']}
+                  redirectTo="/login"
+                >
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/menu"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['admin']}
+                  redirectTo="/login"
+                >
+                  <AdminMenuPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AppStateProvider>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AppStateProvider>
+    </LanguageProvider>
   );
 };
 

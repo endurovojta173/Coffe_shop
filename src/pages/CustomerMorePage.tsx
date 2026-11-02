@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Coffee,
   Download,
+  Globe,
   Heart,
   MessageSquare,
   ShieldCheck,
@@ -11,10 +12,12 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { InstallPwaModal, usePwaInstall } from '../components/InstallPwaModal';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CustomerMorePage: React.FC = () => {
   const { currentUser, messages, updateCurrentUserProfile } = useAppState();
   const { isInstalled } = usePwaInstall();
+  const { t, preference, systemLanguage, setPreference } = useLanguage();
   const [isInstallOpen, setIsInstallOpen] = useState(false);
 
   const notifyEvents = currentUser?.notify_events ?? true;
@@ -32,11 +35,12 @@ export const CustomerMorePage: React.FC = () => {
     <div className="space-y-8">
       <div>
         <span className="text-xs uppercase tracking-widest text-[#D89D60] font-semibold">
-          Příběh kavárny & soukromí
+          {t('common.appName')}
         </span>
-        <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1">
-          Další informace a nastavení
+        <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1 font-serif-heading">
+          {t('more.title')}
         </h1>
+        <p className="text-xs text-[#A39284] mt-1">{t('more.subtitle')}</p>
       </div>
 
       {/* Mobil: sekce pod sebou -> Desktop: md:grid-cols-2 gap-8 (dle AGENTS.md) */}
@@ -49,44 +53,121 @@ export const CustomerMorePage: React.FC = () => {
               alt="Kavárna U Sousedů interiér"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2D221A] via-[#2D221A]/30 to-transparent" />
-            <div className="absolute bottom-4 left-6 right-6 flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-[#1C140D]/90 border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-                <Coffee className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-xs text-[#D89D60] font-semibold">
-                  Od roku 2019
-                </span>
-                <h2 className="text-2xl font-bold text-[#F5EBE1]">O nás</h2>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2D221A] via-transparent to-transparent" />
+            <div className="absolute bottom-4 left-6">
+              <span className="px-3 py-1 rounded-full bg-[#1C140D]/80 border border-[#3E3025] text-xs font-medium text-[#D89D60]">
+                {t('common.openToday')}
+              </span>
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 space-y-4 text-sm text-[#A39284] leading-relaxed">
-            <p className="text-[#F5EBE1] font-medium text-base">
-              Jsme rodinná kavárna „U Sousedů“, kde věříme, že nejlepší káva chutná tam,
-              kde vás znají jménem.
+          <div className="p-6 sm:p-8 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
+                <Coffee className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">
+                  {t('more.aboutTitle')}
+                </h2>
+                <p className="text-xs text-[#A39284]">
+                  Kavárna • Pekárna • Komunitní prostor
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-[#A39284] leading-relaxed">
+              {t('more.aboutParagraph1')}
             </p>
-            <p>
-              Každý týden pro vás vybíráme čerstvě pražená zrna z malých evropských i českých
-              pražíren. Na mlýnku u nás vždy najdete jak vyvážené espresso s čokoládovo-oříškovým
-              profilem, tak ovocnější výběrovou kávu na filtr.
-            </p>
-            <p>
-              Všechny koláče, kváskový chléb i lívance připravujeme přímo v naší kuchyni
-              z poctivých surovin od lokálních farmářů.
+
+            <p className="text-sm text-[#A39284] leading-relaxed">
+              {t('more.aboutParagraph2')}
             </p>
 
             <div className="pt-4 border-t border-[#3E3025] flex items-center gap-3 text-xs text-[#D89D60]">
               <Heart className="w-4 h-4 fill-current shrink-0" />
-              <span>Děkujeme, že jste součástí naší sousedské komunity!</span>
+              <span>{t('more.communityThanks')}</span>
             </div>
           </div>
         </section>
 
-        {/* Pravý sloupec na desktopu: "Instalace aplikace", "Zprávy a upozornění" a "Správa souhlasů" */}
+        {/* Pravý sloupec na desktopu: "Jazyk aplikace", "Instalace aplikace", "Zprávy a upozornění" a "Správa souhlasů" */}
         <div className="space-y-8">
+          {/* Karta Jazyk aplikace / Language Settings */}
+          <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
+                <Globe className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#F5EBE1]">
+                  {t('more.languageSectionTitle')}
+                </h2>
+                <p className="text-xs text-[#A39284]">
+                  {t('more.languageSectionSubtitle')}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setPreference('auto')}
+                className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition cursor-pointer ${
+                  preference === 'auto'
+                    ? 'bg-[#D89D60]/15 border-[#D89D60] text-[#F5EBE1]'
+                    : 'bg-[#221912] border-[#3E3025] text-[#A39284] hover:text-[#F5EBE1]'
+                }`}
+              >
+                <div>
+                  <p className="text-xs font-semibold">{t('more.languageAuto')}</p>
+                  <p className="text-[11px] text-[#A39284] mt-0.5">
+                    {systemLanguage === 'cs' ? 'Detekovaný systém: Čeština' : 'Detected system: English'}
+                  </p>
+                </div>
+                {preference === 'auto' && (
+                  <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreference('cs')}
+                className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition cursor-pointer ${
+                  preference === 'cs'
+                    ? 'bg-[#D89D60]/15 border-[#D89D60] text-[#F5EBE1]'
+                    : 'bg-[#221912] border-[#3E3025] text-[#A39284] hover:text-[#F5EBE1]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-sm">🇨🇿</span>
+                  <span className="text-xs font-semibold">{t('more.languageCs')}</span>
+                </div>
+                {preference === 'cs' && (
+                  <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreference('en')}
+                className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition cursor-pointer ${
+                  preference === 'en'
+                    ? 'bg-[#D89D60]/15 border-[#D89D60] text-[#F5EBE1]'
+                    : 'bg-[#221912] border-[#3E3025] text-[#A39284] hover:text-[#F5EBE1]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-sm">🇬🇧</span>
+                  <span className="text-xs font-semibold">{t('more.languageEn')}</span>
+                </div>
+                {preference === 'en' && (
+                  <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
+                )}
+              </button>
+            </div>
+          </section>
+
           {/* Karta Instalace mobilní aplikace (Android & iPhone) */}
           <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
             <div className="flex items-center gap-3">
@@ -95,23 +176,22 @@ export const CustomerMorePage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-[#F5EBE1]">
-                  Aplikace pro mobilní telefony
+                  {t('more.appTitle')}
                 </h2>
                 <p className="text-xs text-[#A39284]">
-                  Dostupné pro Android i iPhone (iOS)
+                  {t('more.appSubtitle')}
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-[#A39284] leading-relaxed">
-              Mějte věrnostní kartičku vždy po ruce přímo na ploše telefonu. Funguje
-              bleskově i bez čekání na otevírání prohlížeče.
+              {t('more.appDescription')}
             </p>
 
             {isInstalled ? (
               <div className="w-full py-3 px-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs flex items-center justify-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Aplikace je nainstalována na tomto zařízení</span>
+                <span>{t('more.appInstalledBadge')}</span>
               </div>
             ) : (
               <button
@@ -120,7 +200,7 @@ export const CustomerMorePage: React.FC = () => {
                 className="w-full py-3 px-5 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#D89D60]/20 transition cursor-pointer"
               >
                 <Download className="w-4 h-4" />
-                <span>Nainstalovat aplikaci do mobilu</span>
+                <span>{t('more.appInstallButton')}</span>
               </button>
             )}
           </section>
@@ -133,10 +213,10 @@ export const CustomerMorePage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-[#F5EBE1]">
-                  Zprávy a upozornění
+                  {t('more.messagesTitle')}
                 </h2>
                 <p className="text-xs text-[#A39284]">
-                  Nastavení notifikací a aktuality z kavárny
+                  {t('more.messagesSubtitle')}
                 </p>
               </div>
             </div>
@@ -146,10 +226,10 @@ export const CustomerMorePage: React.FC = () => {
               <div className="flex items-center justify-between p-4 rounded-2xl bg-[#221912] border border-[#3E3025]">
                 <div className="pr-4">
                   <p className="text-sm font-medium text-[#F5EBE1]">
-                    Upozornění na nové akce a cuppingy
+                    {t('more.notifyEvents')}
                   </p>
                   <p className="text-xs text-[#A39284] mt-0.5">
-                    Dáme vám vědět o chystaných koncertech a degustacích
+                    Degustace, cuppingy a novinky
                   </p>
                 </div>
                 <button
@@ -161,11 +241,9 @@ export const CustomerMorePage: React.FC = () => {
                     notifyEvents ? 'bg-[#D89D60]' : 'bg-[#1C140D] border border-[#3E3025]'
                   }`}
                 >
-                  <span
-                    className={`block w-5 h-5 rounded-full transition transform ${
-                      notifyEvents
-                        ? 'translate-x-5 bg-[#1C140D]'
-                        : 'translate-x-0 bg-[#A39284]'
+                  <div
+                    className={`w-5 h-5 rounded-full bg-[#1C140D] transition transform ${
+                      notifyEvents ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>
@@ -174,10 +252,10 @@ export const CustomerMorePage: React.FC = () => {
               <div className="flex items-center justify-between p-4 rounded-2xl bg-[#221912] border border-[#3E3025]">
                 <div className="pr-4">
                   <p className="text-sm font-medium text-[#F5EBE1]">
-                    Zprávy z kavárny a speciální nabídky
+                    {t('more.notifyMessages')}
                   </p>
                   <p className="text-xs text-[#A39284] mt-0.5">
-                    Informace o nové kávě na mlýnku a dvojnásobných bodech
+                    Provozní informace a oznámení
                   </p>
                 </div>
                 <button
@@ -189,45 +267,40 @@ export const CustomerMorePage: React.FC = () => {
                     notifyMessages ? 'bg-[#D89D60]' : 'bg-[#1C140D] border border-[#3E3025]'
                   }`}
                 >
-                  <span
-                    className={`block w-5 h-5 rounded-full transition transform ${
-                      notifyMessages
-                        ? 'translate-x-5 bg-[#1C140D]'
-                        : 'translate-x-0 bg-[#A39284]'
+                  <div
+                    className={`w-5 h-5 rounded-full bg-[#1C140D] transition transform ${
+                      notifyMessages ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>
               </div>
             </div>
 
-            {/* Výpis aktualit (app_messages) */}
-            <div className="pt-4 border-t border-[#3E3025] space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#D89D60]">
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>Nejnovější zprávy v aplikaci</span>
-              </div>
-
-              <div className="space-y-3">
-                {messages.map((msg) => (
-                  <article
-                    key={msg.id}
-                    className="p-4 rounded-2xl bg-[#221912] border border-[#3E3025]"
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <h3 className="text-sm font-semibold text-[#F5EBE1]">
-                        {msg.title}
-                      </h3>
-                      <span className="text-[11px] text-[#A39284] whitespace-nowrap">
-                        {new Date(msg.created_at).toLocaleDateString('cs-CZ')}
-                      </span>
+            {/* Poslední zprávy */}
+            {messages.length > 0 && (
+              <div className="pt-4 border-t border-[#3E3025] space-y-3">
+                <p className="text-xs uppercase tracking-wider text-[#A39284] font-semibold flex items-center gap-2">
+                  <MessageSquare className="w-3.5 h-3.5 text-[#D89D60]" />
+                  <span>Přijaté zprávy</span>
+                </p>
+                <div className="space-y-2">
+                  {messages.slice(0, 3).map((msg) => (
+                    <div
+                      key={msg.id}
+                      className="p-3.5 rounded-2xl bg-[#221912] border border-[#3E3025] text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between text-[#F5EBE1] font-semibold">
+                        <span>{msg.title}</span>
+                        <span className="text-[10px] text-[#A39284]">
+                          {new Date(msg.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-[#A39284] leading-relaxed">{msg.body}</p>
                     </div>
-                    <p className="text-xs text-[#A39284] leading-relaxed">
-                      {msg.body}
-                    </p>
-                  </article>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </section>
 
           {/* Karta Správa souhlasů (GDPR) */}
@@ -237,24 +310,19 @@ export const CustomerMorePage: React.FC = () => {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#F5EBE1]">
-                  Správa souhlasů
+                <h2 className="text-xl font-bold text-[#F5EBE1]">
+                  {t('more.gdprTitle')}
                 </h2>
                 <p className="text-xs text-[#A39284]">
-                  Ochrana osobních údajů a nastavení GDPR
+                  {t('more.gdprSubtitle')}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-[#221912] border border-[#3E3025]">
-              <div className="pr-4">
-                <p className="text-sm font-medium text-[#F5EBE1]">
-                  Souhlas se zpracováním údajů pro věrnostní program (GDPR)
-                </p>
-                <p className="text-xs text-[#A39284] mt-0.5">
-                  Uchováváme pouze váš e-mail, jméno a počet nasbíraných káv.
-                </p>
-              </div>
+            <div className="p-4 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-between gap-4">
+              <p className="text-xs text-[#A39284] leading-relaxed">
+                {t('more.gdprConsent')}
+              </p>
               <button
                 type="button"
                 role="switch"
@@ -264,11 +332,9 @@ export const CustomerMorePage: React.FC = () => {
                   gdprConsent ? 'bg-[#D89D60]' : 'bg-[#1C140D] border border-[#3E3025]'
                 }`}
               >
-                <span
-                  className={`block w-5 h-5 rounded-full transition transform ${
-                    gdprConsent
-                      ? 'translate-x-5 bg-[#1C140D]'
-                      : 'translate-x-0 bg-[#A39284]'
+                <div
+                  className={`w-5 h-5 rounded-full bg-[#1C140D] transition transform ${
+                    gdprConsent ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>
