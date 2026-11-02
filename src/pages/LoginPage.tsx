@@ -5,12 +5,14 @@ import {
   ArrowRight,
   CheckCircle2,
   Coffee,
+  Download,
   Loader2,
   Lock,
   Mail,
   User,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { InstallPwaModal } from '../components/InstallPwaModal';
 
 type AuthMode = 'login' | 'register' | 'reset';
 
@@ -31,6 +33,7 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isInstallOpen, setIsInstallOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
@@ -401,8 +404,23 @@ export const LoginPage: React.FC = () => {
               </>
             )}
           </div>
+          <div className="mt-6 text-center text-xs text-[#A39284]">
+            <button
+              type="button"
+              onClick={() => setIsInstallOpen(true)}
+              className="hover:text-[#D89D60] underline inline-flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-[#D89D60]" />
+              <span>Nainstalovat aplikaci do mobilu (Android & iPhone)</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      <InstallPwaModal
+        isOpen={isInstallOpen}
+        onClose={() => setIsInstallOpen(false)}
+      />
     </div>
   );
 };

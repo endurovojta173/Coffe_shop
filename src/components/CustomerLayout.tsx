@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Coffee,
+  Download,
   Home,
   MoreHorizontal,
   QrCode,
@@ -13,9 +14,11 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { LoyaltyCardContent } from './LoyaltyCardModal';
+import { InstallPwaModal } from './InstallPwaModal';
 
 export const CustomerLayout: React.FC = () => {
   const { currentUser, isCardModalOpen, setCardModalOpen } = useAppState();
+  const [isInstallModalOpen, setInstallModalOpen] = useState(false);
   const location = useLocation();
 
   const firstName = currentUser
@@ -83,15 +86,27 @@ export const CustomerLayout: React.FC = () => {
             </div>
           </Link>
 
-          <Link
-            to="/app/account"
-            className="px-3.5 py-1.5 rounded-full bg-[#2D221A] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] flex items-center gap-2"
-          >
-            <span>Ahoj, {greetingName}</span>
-            <div className="w-6 h-6 rounded-full bg-[#D89D60] text-[#1C140D] font-bold flex items-center justify-center text-xs">
-              {firstName.charAt(0).toUpperCase()}
-            </div>
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setInstallModalOpen(true)}
+              title="Instalovat aplikaci do mobilu"
+              className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#D89D60] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Instalovat</span>
+            </button>
+
+            <Link
+              to="/app/account"
+              className="px-3 py-1.5 rounded-full bg-[#2D221A] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] flex items-center gap-1.5"
+            >
+              <span>{firstName}</span>
+              <div className="w-6 h-6 rounded-full bg-[#D89D60] text-[#1C140D] font-bold flex items-center justify-center text-xs">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -163,8 +178,17 @@ export const CustomerLayout: React.FC = () => {
             </NavLink>
           </nav>
 
-          {/* CTA Moje kartička + Pozdrav uživatele */}
-          <div className="flex items-center gap-4">
+          {/* CTA Moje kartička + Instalovat + Pozdrav uživatele */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setInstallModalOpen(true)}
+              className="px-4 py-2 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-medium text-[#F5EBE1] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-[#D89D60]" />
+              <span>Instalovat aplikaci</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setCardModalOpen(true)}
@@ -305,6 +329,12 @@ export const CustomerLayout: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modální okno pro instalaci aplikace na mobil (Android / iPhone) */}
+      <InstallPwaModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setInstallModalOpen(false)}
+      />
     </div>
   );
 };

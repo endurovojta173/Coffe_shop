@@ -1,9 +1,19 @@
-import React from 'react';
-import { Bell, Coffee, Heart, MessageSquare, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Bell,
+  Coffee,
+  Download,
+  Heart,
+  MessageSquare,
+  ShieldCheck,
+  Smartphone,
+} from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { InstallPwaModal } from '../components/InstallPwaModal';
 
 export const CustomerMorePage: React.FC = () => {
   const { currentUser, messages, updateCurrentUserProfile } = useAppState();
+  const [isInstallOpen, setIsInstallOpen] = useState(false);
 
   const notifyEvents = currentUser?.notify_events ?? true;
   const notifyMessages = currentUser?.notify_messages ?? true;
@@ -73,8 +83,39 @@ export const CustomerMorePage: React.FC = () => {
           </div>
         </section>
 
-        {/* Pravý sloupec na desktopu: "Zprávy a upozornění" a "Správa souhlasů" */}
+        {/* Pravý sloupec na desktopu: "Instalace aplikace", "Zprávy a upozornění" a "Správa souhlasů" */}
         <div className="space-y-8">
+          {/* Karta Instalace mobilní aplikace (Android & iPhone) */}
+          <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
+                <Smartphone className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#F5EBE1]">
+                  Aplikace pro mobilní telefony
+                </h2>
+                <p className="text-xs text-[#A39284]">
+                  Dostupné pro Android i iPhone (iOS)
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#A39284] leading-relaxed">
+              Mějte věrnostní kartičku vždy po ruce přímo na ploše telefonu. Funguje
+              bleskově i bez čekání na otevírání prohlížeče.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setIsInstallOpen(true)}
+              className="w-full py-3 px-5 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#D89D60]/20 transition cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Nainstalovat aplikaci do mobilu</span>
+            </button>
+          </section>
+
           {/* Karta Zprávy a upozornění */}
           <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
             <div className="flex items-center gap-3">
@@ -226,7 +267,11 @@ export const CustomerMorePage: React.FC = () => {
           </section>
         </div>
       </div>
+
+      <InstallPwaModal
+        isOpen={isInstallOpen}
+        onClose={() => setIsInstallOpen(false)}
+      />
     </div>
   );
 };
-
