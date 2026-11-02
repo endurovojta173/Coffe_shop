@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  Coffee,
   Download,
   Home,
   MoreHorizontal,
@@ -15,6 +14,7 @@ import {
 import { useAppState } from '../context/AppStateContext';
 import { LoyaltyCardContent } from './LoyaltyCardModal';
 import { InstallPwaModal } from './InstallPwaModal';
+import { CoffeeBeanIcon } from './CoffeeBeanIcon';
 
 export const CustomerLayout: React.FC = () => {
   const { currentUser, isCardModalOpen, setCardModalOpen } = useAppState();
@@ -76,7 +76,7 @@ export const CustomerLayout: React.FC = () => {
         <div className="px-4 py-3.5 flex items-center justify-between">
           <Link to="/app/home" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-[#2D221A] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-              <Coffee className="w-5 h-5" />
+              <CoffeeBeanIcon className="w-5 h-5" />
             </div>
             <div>
               <span className="font-serif-heading text-lg font-bold tracking-tight text-[#F5EBE1] block leading-none">
@@ -116,7 +116,7 @@ export const CustomerLayout: React.FC = () => {
           {/* Logo */}
           <Link to="/app/home" className="flex items-center gap-3 group">
             <div className="w-11 h-11 rounded-2xl bg-[#2D221A] border border-[#3E3025] group-hover:border-[#D89D60] transition flex items-center justify-center text-[#D89D60]">
-              <Coffee className="w-6 h-6" />
+              <CoffeeBeanIcon className="w-6 h-6" />
             </div>
             <div>
               <span className="font-serif-heading text-xl font-bold text-[#F5EBE1] block leading-tight">

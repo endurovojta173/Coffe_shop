@@ -1,10 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
   <rect width="128" height="128" rx="32" fill="#1C140D"/>
   <rect x="6" y="6" width="116" height="116" rx="26" stroke="#3E3025" stroke-width="2"/>
-  <path d="M36 52H80V74C80 86.1503 70.1503 96 58 96C45.8497 96 36 86.1503 36 74V52Z" fill="#D89D60"/>
-  <path d="M80 58H86C91.5228 58 96 62.4772 96 68C96 73.5228 91.5228 78 86 78H80" stroke="#D89D60" stroke-width="6" stroke-linecap="round"/>
-  <path d="M48 34C48 38 52 40 52 44" stroke="#F5EBE1" stroke-width="4" stroke-linecap="round"/>
-  <path d="M60 30C60 35 64 38 64 44" stroke="#F5EBE1" stroke-width="4" stroke-linecap="round"/>
-  <path d="M72 34C72 38 76 40 76 44" stroke="#F5EBE1" stroke-width="4" stroke-linecap="round"/>
+  <!-- Kávové zrnko natočené o -30 stupňů -->
+  <g transform="translate(64,64) rotate(-32) translate(-64,-64)">
+    <!-- Tělo zrnka -->
+    <path d="M64 20C41 20 28 39 28 64s13 44 36 44 36-19 36-44-13-44-36-44Z" fill="#D89D60"/>
+    <!-- Stínovaná polovina pro 3D efekt kávového zrna -->
+    <path d="M64 20C41 20 28 39 28 64s13 44 36 44c-10-14-12-32-6-46 6-14 4-34 0-42Z" fill="#BA7F45"/>
+    <!-- Charakteristická středová vlnovka zrnka -->
+    <path d="M64 24C58 38 56 49 66 64s8 25-2 40" stroke="#1C140D" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
 </svg>
-

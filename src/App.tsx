@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { Coffee, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { CoffeeBeanIcon } from './components/CoffeeBeanIcon';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
 import { CustomerLayout } from './components/CustomerLayout';
 import { LoginPage } from './pages/LoginPage';
@@ -25,7 +26,7 @@ const ProtectedRoute: React.FC<{
     return (
       <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col items-center justify-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-[#2D221A] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-          <Coffee className="w-6 h-6" />
+          <CoffeeBeanIcon className="w-6 h-6" />
         </div>
         <div className="flex items-center gap-2 text-sm text-[#A39284]">
           <Loader2 className="w-4 h-4 animate-spin text-[#D89D60]" />

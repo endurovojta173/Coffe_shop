@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
-  Coffee,
   Download,
   Loader2,
   Lock,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { InstallPwaModal } from '../components/InstallPwaModal';
+import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
 
 type AuthMode = 'login' | 'register' | 'reset';
 
@@ -133,7 +133,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#2D221A]/90 border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-            <Coffee className="w-6 h-6" />
+            <CoffeeBeanIcon className="w-6 h-6" />
           </div>
           <div>
             <span className="font-serif-heading text-2xl font-bold text-[#F5EBE1] block">
@@ -175,7 +175,7 @@ export const LoginPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-[#1C140D]/20 via-[#1C140D]/60 to-[#1C140D]" />
           <div className="absolute bottom-4 left-6 right-6 flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-[#2D221A] border border-[#3E3025] flex items-center justify-center text-[#D89D60] shadow-lg">
-              <Coffee className="w-6 h-6" />
+              <CoffeeBeanIcon className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#F5EBE1]">U Sousedů</h1>

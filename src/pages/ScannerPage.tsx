@@ -6,7 +6,6 @@ import {
   Camera,
   CameraOff,
   CheckCircle2,
-  Coffee,
   History,
   LogOut,
   QrCode,
@@ -15,6 +14,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
 import type { ScanCardResult } from '../lib/database.types';
 
 export const ScannerPage: React.FC = () => {
@@ -120,7 +120,7 @@ export const ScannerPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 md:px-8 h-18 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-              <Coffee className="w-5 h-5" />
+              <CoffeeBeanIcon className="w-5 h-5" />
             </div>
             <div>
               <span className="font-serif-heading text-lg font-bold text-[#F5EBE1] block leading-none">

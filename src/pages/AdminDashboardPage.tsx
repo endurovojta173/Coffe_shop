@@ -4,7 +4,6 @@ import {
   AlertCircle,
   ArrowRight,
   Calendar,
-  Coffee,
   LogOut,
   MessageSquare,
   Plus,
@@ -15,6 +14,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
+import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
 import type { UserRole } from '../lib/database.types';
 
 type ActiveAdminModal = 'events' | 'staff' | 'messages' | null;
@@ -120,7 +120,7 @@ export const AdminDashboardPage: React.FC = () => {
               to="/app/home"
               className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#F5EBE1] transition"
             >
-              <Coffee className="w-3.5 h-3.5 text-[#D89D60]" />
+              <CoffeeBeanIcon className="w-3.5 h-3.5 text-[#D89D60]" />
               <span>Zákaznická PWA</span>
             </Link>
             <Link
