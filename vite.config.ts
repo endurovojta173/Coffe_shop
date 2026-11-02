@@ -17,7 +17,7 @@ export default defineConfig({
         'pwa-512x512.png',
       ],
       manifest: {
-        id: 'cz.usousedu.kavarna.pwa.v2',
+        id: 'cz.usousedu.kavarna.pwa.v3',
         name: 'Kavárna U Sousedů',
         short_name: 'U Sousedů',
         description: 'Věrnostní aplikace a katalog rodinné kavárny U Sousedů',
@@ -25,7 +25,7 @@ export default defineConfig({
         background_color: '#1C140D',
         display: 'standalone',
         orientation: 'portrait-primary',
-        start_url: './app/home?source=pwa',
+        start_url: './?source=pwa',
         scope: './',
         icons: [
           {

@@ -55,14 +55,31 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
+const RootRedirect: React.FC = () => {
+  const { isLoadingAuth, currentUser } = useAppState();
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-[#1C140D] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-[#D89D60]" />
+      </div>
+    );
+  }
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  if (currentUser.role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (currentUser.role === 'staff') return <Navigate to="/scanner" replace />;
+  return <Navigate to="/app/home" replace />;
+};
+
 export const App: React.FC = () => {
   return (
     <LanguageProvider>
       <AppStateProvider>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
-            {/* Výchozí přesměrování */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* Výchozí přesměrování podle přihlášení a role */}
+            <Route path="/" element={<RootRedirect />} />
 
             {/* Jednotná přihlašovací stránka pro všechny role */}
             <Route path="/login" element={<LoginPage />} />
