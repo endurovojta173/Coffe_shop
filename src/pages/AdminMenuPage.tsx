@@ -99,23 +99,27 @@ export const AdminMenuPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col">
+    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col w-full overflow-x-hidden">
       {/* Horní lišta administrace */}
       <header className="sticky top-0 z-30 bg-[#2D221A]/95 backdrop-blur-md border-b border-[#3E3025]">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 h-18 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 sm:h-18 flex items-center justify-between gap-3">
           <Link
             to="/admin/dashboard"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#A39284] hover:text-[#F5EBE1] transition"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#A39284] hover:text-[#F5EBE1] transition min-w-0"
           >
-            <ArrowLeft className="w-4 h-4 text-[#D89D60]" />
-            <span>Zpět na Přehled kavárny</span>
+            <ArrowLeft className="w-4 h-4 text-[#D89D60] shrink-0" />
+            <span className="truncate">
+              <span className="hidden sm:inline">Zpět na Přehled kavárny</span>
+              <span className="sm:hidden">Zpět na Přehled</span>
+            </span>
           </Link>
 
           <Link
             to="/app/menu"
-            className="text-xs px-4 py-2 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-[#D89D60] transition"
+            className="text-xs px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-[#D89D60] transition shrink-0"
           >
-            Zobrazit živou nabídku zákazníka →
+            <span className="hidden sm:inline">Zobrazit živou nabídku →</span>
+            <span className="sm:hidden">Živá nabídka →</span>
           </Link>
         </div>
       </header>
@@ -186,15 +190,15 @@ export const AdminMenuPage: React.FC = () => {
             return (
               <section
                 key={category.id}
-                className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between gap-6"
+                className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl flex flex-col justify-between gap-6"
               >
                 <div className="space-y-5">
                   <div className="flex items-center justify-between pb-4 border-b border-[#3E3025]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
                         <Coffee className="w-5 h-5" />
                       </div>
-                      <h2 className="text-2xl font-bold text-[#F5EBE1]">
+                      <h2 className="text-xl sm:text-2xl font-bold text-[#F5EBE1]">
                         {category.name}
                       </h2>
                     </div>
@@ -208,7 +212,7 @@ export const AdminMenuPage: React.FC = () => {
                     {itemsInCategory.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-[#221912] border border-[#3E3025]"
+                        className="flex items-center gap-2 p-2 sm:p-2.5 rounded-2xl bg-[#221912] border border-[#3E3025]"
                       >
                         <input
                           type="text"
@@ -217,10 +221,10 @@ export const AdminMenuPage: React.FC = () => {
                             handleItemChange(item.id, 'name', e.target.value)
                           }
                           aria-label="Název položky"
-                          className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#1C140D] border border-[#3E3025] text-sm text-[#F5EBE1] focus:outline-none focus:border-[#D89D60]"
+                          className="flex-1 min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-[#1C140D] border border-[#3E3025] text-xs sm:text-sm text-[#F5EBE1] focus:outline-none focus:border-[#D89D60]"
                         />
 
-                        <div className="relative w-24 shrink-0">
+                        <div className="relative w-20 sm:w-24 shrink-0">
                           <input
                             type="number"
                             min={0}
@@ -233,9 +237,9 @@ export const AdminMenuPage: React.FC = () => {
                               )
                             }
                             aria-label="Cena v Kč"
-                            className="w-full pl-3 pr-8 py-2 rounded-xl bg-[#1C140D] border border-[#3E3025] text-sm font-bold text-[#D89D60] text-right focus:outline-none focus:border-[#D89D60]"
+                            className="w-full pl-2 sm:pl-3 pr-7 sm:pr-8 py-2 rounded-xl bg-[#1C140D] border border-[#3E3025] text-xs sm:text-sm font-bold text-[#D89D60] text-right focus:outline-none focus:border-[#D89D60]"
                           />
-                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#A39284]">
+                          <span className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-[11px] sm:text-xs text-[#A39284]">
                             Kč
                           </span>
                         </div>
@@ -244,7 +248,7 @@ export const AdminMenuPage: React.FC = () => {
                           type="button"
                           onClick={() => handleRemoveItem(item.id)}
                           title="Odstranit položku"
-                          className="p-2 rounded-full text-[#A39284] hover:text-[#D96B6B] hover:bg-[#D96B6B]/10 transition cursor-pointer shrink-0"
+                          className="p-1.5 sm:p-2 rounded-full text-[#A39284] hover:text-[#D96B6B] hover:bg-[#D96B6B]/10 transition cursor-pointer shrink-0"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

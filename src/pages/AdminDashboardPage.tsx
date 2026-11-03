@@ -97,46 +97,48 @@ export const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col">
+    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col w-full overflow-x-hidden">
       {/* Horní navigační lišta administrace */}
       <header className="sticky top-0 z-30 bg-[#2D221A]/95 backdrop-blur-md border-b border-[#3E3025]">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="max-w-6xl mx-auto px-4 md:px-8 h-18 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60] shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="font-serif-heading text-xl font-bold text-[#F5EBE1] block leading-none">
+            <div className="min-w-0">
+              <span className="font-serif-heading text-base sm:text-xl font-bold text-[#F5EBE1] block leading-none truncate">
                 U Sousedů • Administrace
               </span>
-              <span className="text-xs text-[#A39284]">
+              <span className="text-[11px] sm:text-xs text-[#A39284] truncate block mt-0.5">
                 Správce: {currentUser?.full_name ?? 'Admin'}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               to="/app/home"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#F5EBE1] transition"
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#F5EBE1] transition"
             >
               <CoffeeBeanIcon className="w-3.5 h-3.5 text-[#D89D60]" />
               <span>Zákaznická PWA</span>
             </Link>
             <Link
               to="/scanner"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#F5EBE1] transition"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-medium text-[#F5EBE1] transition"
             >
               <ScanLine className="w-3.5 h-3.5 text-[#D89D60]" />
-              <span>Skener baristy</span>
+              <span>Skener</span>
             </Link>
+            {/* Místo nápisu odhlásit pouze zanechat ikonu */}
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="px-4 py-2 rounded-full bg-[#221912] hover:border-[#D96B6B] border border-[#3E3025] text-xs font-medium text-[#A39284] hover:text-[#D96B6B] inline-flex items-center gap-1.5 transition cursor-pointer"
+              title="Odhlásit se"
+              aria-label="Odhlásit se"
+              className="w-9 h-9 rounded-full bg-[#221912] hover:border-[#D96B6B] border border-[#3E3025] text-[#A39284] hover:text-[#D96B6B] flex items-center justify-center transition cursor-pointer shrink-0"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Odhlásit</span>
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -399,9 +401,9 @@ export const AdminDashboardPage: React.FC = () => {
               {profiles.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-[#221912] border border-[#3E3025]"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#221912] border border-[#3E3025]"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-sm text-[#F5EBE1] truncate">
                       {member.full_name}
                     </p>
@@ -415,7 +417,7 @@ export const AdminDashboardPage: React.FC = () => {
                     onChange={(e) =>
                       void handleRoleChange(member.id, e.target.value as UserRole)
                     }
-                    className="px-3.5 py-2 rounded-full bg-[#1C140D] border border-[#3E3025] text-xs font-semibold text-[#D89D60] focus:outline-none focus:border-[#D89D60]"
+                    className="w-full sm:w-auto px-3.5 py-2 rounded-full bg-[#1C140D] border border-[#3E3025] text-xs font-semibold text-[#D89D60] focus:outline-none focus:border-[#D89D60] shrink-0"
                   >
                     <option value="customer">customer (Zákazník)</option>
                     <option value="staff">staff (Barista)</option>

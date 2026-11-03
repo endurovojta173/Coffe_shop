@@ -6,16 +6,27 @@ import {
   Camera,
   CameraOff,
   CheckCircle2,
+  Coffee,
   History,
+  Loader2,
   LogOut,
+  Plus,
   QrCode,
   Sparkles,
   Star,
-  UserCheck,
+  X,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
+import { supabase } from '../lib/supabase';
 import type { ScanCardResult } from '../lib/database.types';
+
+interface ModalCustomerState {
+  id: string;
+  card_number: string;
+  full_name: string;
+  coffee_count: number;
+}
 
 export const ScannerPage: React.FC = () => {
   const {
@@ -29,18 +40,19 @@ export const ScannerPage: React.FC = () => {
 
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  // Defaultně prázdné pole – nezobrazuje se žádné předvyplněné číslo zákaznické karty
   const [manualCardNumber, setManualCardNumber] = useState('');
   const [lastResult, setLastResult] = useState<ScanCardResult | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
+  
+  // Stav modálního okna po naskenování karty
+  const [scannedCustomer, setScannedCustomer] = useState<ModalCustomerState | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionResult, setActionResult] = useState<ScanCardResult | null>(null);
+
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   const customerProfiles = profiles.filter((p) => p.role === 'customer');
-
-  useEffect(() => {
-    if (!manualCardNumber && customerProfiles.length > 0) {
-      setManualCardNumber(customerProfiles[0].card_number);
-    }
-  }, [customerProfiles, manualCardNumber]);
 
   useEffect(() => {
     return () => {
@@ -50,20 +62,96 @@ export const ScannerPage: React.FC = () => {
     };
   }, []);
 
-  const executeScan = async (cardNum: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return 'TN';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  // Vyhledání zákazníka a otevření modálního okna
+  const handleLookupCustomer = async (cardNumber: string) => {
     setScanError(null);
-    const targetCard = cardNum.trim() || customerProfiles[0]?.card_number || '';
-    if (!targetCard) {
+    const normalized = cardNumber.replace(/\s+/g, '').trim();
+    if (!normalized) {
       setScanError('Zadejte prosím číslo zákaznické karty (např. 0042 1187).');
       return;
     }
 
+    // 1. Zkusit najít v lokálním seznamu profilů
+    let found = customerProfiles.find(
+      (p) => p.card_number.replace(/\s+/g, '') === normalized
+    );
+
+    // 2. Pokud není v lokálním stavu, dotázat se přímo Supabase
+    if (!found && supabase) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'customer')
+        .ilike('card_number', `%${normalized}%`)
+        .maybeSingle();
+      if (data) {
+        found = data;
+      }
+    }
+
+    if (found) {
+      setScannedCustomer({
+        id: found.id,
+        card_number: found.card_number,
+        full_name: found.full_name,
+        coffee_count: found.coffee_count,
+      });
+      setActionResult(null);
+    } else {
+      setScanError(`Zákaznická karta s číslem "${cardNumber}" nebyla v systému nalezena.`);
+    }
+  };
+
+  // Obsluha kliknutí na tlačítko "Klepněte pro simulaci skenu"
+  const handleSimulationClick = () => {
+    setScanError(null);
+    if (manualCardNumber.trim()) {
+      void handleLookupCustomer(manualCardNumber);
+    } else if (customerProfiles.length > 0) {
+      // Vybereme pro simulaci první zákaznický profil (např. Jana S.) bez předvyplňování inputu
+      const sample = customerProfiles[0];
+      setScannedCustomer({
+        id: sample.id,
+        card_number: sample.card_number,
+        full_name: sample.full_name,
+        coffee_count: sample.coffee_count,
+      });
+      setActionResult(null);
+    } else {
+      setScanError('V systému zatím není registrován žádný zákazník pro simulaci.');
+    }
+  };
+
+  // Potvrzení akce v modálním okně (přidat kávu / uplatnit odměnu)
+  const handleConfirmAction = async (cardNumber: string) => {
+    setActionLoading(true);
+    setScanError(null);
     try {
-      const res = await scanCustomerCard(targetCard);
+      const res = await scanCustomerCard(cardNumber);
+      setActionResult(res);
       setLastResult(res);
+
+      // Aktualizace lokálního počítadla v modálu dle výsledku
+      setScannedCustomer((prev) =>
+        prev
+          ? {
+              ...prev,
+              coffee_count: res.new_count,
+            }
+          : null
+      );
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Chyba při načítání karty.';
+      const msg = err instanceof Error ? err.message : 'Chyba při připsání kávy.';
       setScanError(msg);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -92,7 +180,7 @@ export const ScannerPage: React.FC = () => {
           qrbox: { width: 220, height: 220 },
         },
         (decodedText) => {
-          void executeScan(decodedText);
+          void handleLookupCustomer(decodedText);
           void html5QrCode.stop().catch(() => undefined);
           setCameraActive(false);
         },
@@ -114,93 +202,94 @@ export const ScannerPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col">
-      {/* Horní lišta se jménem baristy a odhlášením přesně dle zadani.md */}
+    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col w-full overflow-x-hidden">
+      {/* Horní lišta: Barista avatar + název + pouze ikona odhlášení (žádný horizontální scroll) */}
       <header className="sticky top-0 z-30 bg-[#2D221A]/95 backdrop-blur-md border-b border-[#3E3025]">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 h-18 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-              <CoffeeBeanIcon className="w-5 h-5" />
+        <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+          {/* Vlevo: Barista avatar s iniciálami a jménem */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#221912] border border-[#3E3025] flex items-center justify-center text-xs font-bold text-[#D89D60] shrink-0">
+              {getInitials(currentUser?.full_name)}
             </div>
-            <div>
-              <span className="font-serif-heading text-lg font-bold text-[#F5EBE1] block leading-none">
-                U Sousedů • Pokladní skener
-              </span>
-              <span className="text-xs text-[#A39284]">
-                RPC: <code className="text-[#D89D60]">scan_customer_card</code>
-              </span>
-            </div>
+            <span className="text-xs sm:text-sm font-semibold text-[#F5EBE1] truncate">
+              {currentUser?.full_name ?? 'Barista'}
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Uprostřed: Logo kavárny */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
+              <CoffeeBeanIcon className="w-4 h-4" />
+            </div>
+            <span className="font-serif-heading text-sm sm:text-base font-bold text-[#F5EBE1] tracking-wide hidden xs:inline">
+              U Sousedů
+            </span>
+          </div>
+
+          {/* Vpravo: Odkazy na sekce (desktop) + pouze ikona odhlášení (bez nápisu) */}
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               to="/app/home"
-              className="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs text-[#A39284] hover:text-[#F5EBE1] transition"
+              className="hidden md:inline-flex px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs text-[#A39284] hover:text-[#F5EBE1] transition"
             >
               Zákaznická část
             </Link>
             {currentUser?.role === 'admin' && (
               <Link
                 to="/admin/dashboard"
-                className="hidden sm:inline-flex px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs text-[#A39284] hover:text-[#F5EBE1] transition"
+                className="hidden md:inline-flex px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs text-[#A39284] hover:text-[#F5EBE1] transition"
               >
                 Administrace
               </Link>
             )}
 
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025]">
-              <UserCheck className="w-4 h-4 text-[#D89D60]" />
-              <span className="text-xs font-semibold text-[#F5EBE1]">
-                {currentUser?.full_name ?? 'Barista'}
-              </span>
-            </div>
-
+            {/* Místo nápisu odhlásit pouze zanechat ikonu dle zadání */}
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="px-4 py-1.5 rounded-full bg-[#221912] hover:border-[#D96B6B] border border-[#3E3025] text-xs font-medium text-[#A39284] hover:text-[#D96B6B] inline-flex items-center gap-1.5 transition cursor-pointer"
+              title="Odhlásit se"
+              aria-label="Odhlásit se"
+              className="w-9 h-9 rounded-full bg-[#221912] hover:border-[#D96B6B] border border-[#3E3025] text-[#A39284] hover:text-[#D96B6B] flex items-center justify-center transition cursor-pointer shrink-0"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Odhlásit</span>
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-8 py-8">
-        {/* Centrovaný čtvercový hledáček kamery (max-w-lg mx-auto) dle zadani.md */}
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-8 py-6 sm:py-8">
         <div className="max-w-lg mx-auto space-y-6">
           <div className="text-center">
-            <span className="text-xs uppercase tracking-widest text-[#D89D60] font-semibold">
-              Rozhraní pro baristy
+            <span className="text-[11px] sm:text-xs uppercase tracking-widest text-[#D89D60] font-semibold">
+              Pokladní skener
             </span>
-            <h1 className="text-3xl font-bold text-[#F5EBE1] mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#F5EBE1] mt-1">
               Načtení věrnostní karty
             </h1>
-            <p className="text-sm text-[#A39284] mt-1">
+            <p className="text-xs sm:text-sm text-[#A39284] mt-1">
               Namiřte kameru na QR kód zákazníka nebo zadejte číslo karty
             </p>
           </div>
 
           {/* Karta se čtvercovým hledáčkem */}
-          <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 shadow-2xl space-y-5">
+          <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
             <div className="relative aspect-square w-full max-w-sm mx-auto rounded-3xl bg-[#221912] border-2 border-dashed border-[#D89D60]/60 overflow-hidden flex flex-col items-center justify-center">
               <div id="barista-qr-reader" className="w-full h-full" />
 
               {!cameraActive && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="w-48 h-48 relative flex items-center justify-center mb-4">
-                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#D89D60] rounded-tl-xl" />
-                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#D89D60] rounded-tr-xl" />
-                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#D89D60] rounded-bl-xl" />
-                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#D89D60] rounded-br-xl" />
-                    <QrCode className="w-20 h-20 text-[#D89D60]/80" />
+                  <div className="w-40 h-40 sm:w-48 sm:h-48 relative flex items-center justify-center mb-3">
+                    <div className="absolute top-0 left-0 w-7 h-7 border-t-4 border-l-4 border-[#D89D60] rounded-tl-xl" />
+                    <div className="absolute top-0 right-0 w-7 h-7 border-t-4 border-r-4 border-[#D89D60] rounded-tr-xl" />
+                    <div className="absolute bottom-0 left-0 w-7 h-7 border-b-4 border-l-4 border-[#D89D60] rounded-bl-xl" />
+                    <div className="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-[#D89D60] rounded-br-xl" />
+                    <QrCode className="w-16 h-16 sm:w-20 sm:h-20 text-[#D89D60]/80" />
                   </div>
-                  <p className="text-sm font-medium text-[#F5EBE1]">
+                  <p className="text-xs sm:text-sm font-medium text-[#F5EBE1]">
                     Hledáček připraven ke skenování
                   </p>
-                  <p className="text-xs text-[#A39284] mt-1">
-                    Podporuje mobilní kameru i pokladní webkameru
+                  <p className="text-[11px] text-[#A39284] mt-1">
+                    Podporuje mobilní fotoaparát i pokladní webkameru
                   </p>
                 </div>
               )}
@@ -213,14 +302,14 @@ export const ScannerPage: React.FC = () => {
               </div>
             )}
 
-            {/* Povinné fallback tlačítko "Klepněte pro simulaci skenu" přesně podle AGENTS.md */}
+            {/* Tlačítko pro simulaci skenu – otevře okno s přehledem karty */}
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => void executeScan(manualCardNumber)}
-                className="w-full py-4 px-6 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-[#D89D60]/25 transition transform active:scale-[0.99] cursor-pointer"
+                onClick={handleSimulationClick}
+                className="w-full py-3.5 sm:py-4 px-6 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-[#D89D60]/25 transition transform active:scale-[0.99] cursor-pointer"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Klepněte pro simulaci skenu</span>
               </button>
 
@@ -243,106 +332,94 @@ export const ScannerPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Výběr zákaznické karty nebo ruční zadání čísla */}
-            <div className="pt-4 border-t border-[#3E3025] space-y-3">
+            {/* Ruční vyhledání čísla karty zákazníka bez předvyplněné hodnoty */}
+            <div className="pt-4 border-t border-[#3E3025] space-y-2.5">
               <label className="block text-xs font-medium text-[#A39284]">
-                Číslo karty zákazníka:
+                Zadat číslo karty ručně:
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={manualCardNumber}
                   onChange={(e) => setManualCardNumber(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleLookupCustomer(manualCardNumber);
+                    }
+                  }}
                   placeholder="např. 0042 1187"
-                  className="flex-1 px-4 py-2.5 rounded-full bg-[#221912] border border-[#3E3025] text-sm font-mono text-[#F5EBE1] focus:outline-none focus:border-[#D89D60]"
+                  className="flex-1 min-w-0 px-4 py-2.5 rounded-full bg-[#221912] border border-[#3E3025] text-xs sm:text-sm font-mono text-[#F5EBE1] placeholder-[#A39284]/50 focus:outline-none focus:border-[#D89D60]"
                 />
                 <button
                   type="button"
-                  onClick={() => void executeScan(manualCardNumber)}
-                  className="px-5 py-2.5 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-semibold text-[#D89D60] transition cursor-pointer"
+                  onClick={() => void handleLookupCustomer(manualCardNumber)}
+                  className="px-4 sm:px-5 py-2.5 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-semibold text-[#D89D60] transition cursor-pointer shrink-0"
                 >
-                  Připsat bod
+                  Vyhledat
                 </button>
               </div>
-
-              {customerProfiles.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {customerProfiles.slice(0, 8).map((cust) => (
-                    <button
-                      key={cust.id}
-                      type="button"
-                      onClick={() => setManualCardNumber(cust.card_number)}
-                      className={`px-3 py-1 rounded-full text-xs border transition cursor-pointer ${
-                        manualCardNumber === cust.card_number
-                          ? 'bg-[#D89D60]/20 border-[#D89D60] text-[#D89D60] font-semibold'
-                          : 'bg-[#221912] border-[#3E3025] text-[#A39284] hover:text-[#F5EBE1]'
-                      }`}
-                    >
-                      {cust.full_name} ({cust.card_number} • {cust.coffee_count}/10)
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Výsledek posledního skenu */}
+          {/* Chybová zpráva při vyhledávání */}
           {scanError && (
-            <div className="p-4 rounded-2xl bg-[#D96B6B]/15 border border-[#D96B6B] text-sm text-[#F5EBE1] flex items-center gap-3">
+            <div className="p-4 rounded-2xl bg-[#D96B6B]/15 border border-[#D96B6B] text-xs sm:text-sm text-[#F5EBE1] flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-[#D96B6B] shrink-0" />
               <span>{scanError}</span>
             </div>
           )}
 
-          {lastResult && (
+          {/* Poslední výsledek připsání na pozadí */}
+          {lastResult && !scannedCustomer && (
             <div
-              className={`p-6 rounded-3xl border shadow-xl transition ${
+              className={`p-5 rounded-3xl border shadow-xl transition ${
                 lastResult.reward_redeemed
                   ? 'bg-[#D89D60]/20 border-[#D89D60]'
                   : 'bg-[#2D221A] border-[#3E3025]'
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-[#D89D60] text-[#1C140D] flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-2xl bg-[#D89D60] text-[#1C140D] flex items-center justify-center shrink-0">
                     {lastResult.reward_redeemed ? (
-                      <Star className="w-6 h-6 fill-current" />
+                      <Star className="w-5 h-5 fill-current" />
                     ) : (
-                      <CheckCircle2 className="w-6 h-6" />
+                      <CheckCircle2 className="w-5 h-5" />
                     )}
                   </div>
                   <div>
                     <span className="text-xs font-mono text-[#D89D60] block">
                       Karta {lastResult.card_number}
                     </span>
-                    <h2 className="text-xl font-bold text-[#F5EBE1]">
+                    <h2 className="text-base sm:text-lg font-bold text-[#F5EBE1]">
                       {lastResult.full_name}
                     </h2>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-bold text-[#D89D60] block">
+                  <span className="text-xl font-bold text-[#D89D60] block">
                     {lastResult.new_count}/10
                   </span>
-                  <span className="text-[11px] text-[#A39284]">
+                  <span className="text-[10px] text-[#A39284]">
                     dříve {lastResult.previous_count}/10
                   </span>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-[#F5EBE1] font-medium bg-[#221912] p-3.5 rounded-2xl border border-[#3E3025]">
+              <p className="mt-3 text-xs text-[#F5EBE1] font-medium bg-[#221912] p-3 rounded-xl border border-[#3E3025]">
                 {lastResult.message}
               </p>
             </div>
           )}
 
           {/* Historie posledních skenů (loyalty_logs) */}
-          <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 space-y-4">
+          <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#F5EBE1]">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#F5EBE1]">
                 <History className="w-4 h-4 text-[#D89D60]" />
-                <span>Poslední transakce (loyalty_logs)</span>
+                <span>Poslední transakce</span>
               </div>
-              <span className="text-xs text-[#A39284]">
+              <span className="text-[11px] text-[#A39284]">
                 Celkem {loyaltyLogs.length} záznamů
               </span>
             </div>
@@ -358,19 +435,19 @@ export const ScannerPage: React.FC = () => {
                   return (
                     <div
                       key={log.id}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-xs"
+                      className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-xs"
                     >
-                      <div>
-                        <span className="font-semibold text-[#F5EBE1]">
+                      <div className="min-w-0">
+                        <span className="font-semibold text-[#F5EBE1] truncate block">
                           {customer?.full_name ?? 'Zákazník'}
                         </span>
-                        <span className="text-[#A39284] ml-2 font-mono">
-                          ({customer?.card_number ?? '—'})
+                        <span className="text-[#A39284] font-mono text-[11px]">
+                          {customer?.card_number ?? '—'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="shrink-0">
                         <span
-                          className={`px-2.5 py-0.5 rounded-full font-semibold ${
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap ${
                             log.action === 'redeem_reward'
                               ? 'bg-[#D89D60] text-[#1C140D]'
                               : 'bg-[#2D221A] text-[#D89D60] border border-[#3E3025]'
@@ -389,6 +466,140 @@ export const ScannerPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* ========================================================================= */}
+      {/* MODÁLNÍ OKNO PO NASKENOVÁNÍ DLE FIGMA NÁVRHU                              */}
+      {/* ========================================================================= */}
+      {scannedCustomer && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setScannedCustomer(null);
+              setActionResult(null);
+            }
+          }}
+        >
+          <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl relative my-auto animate-in zoom-in-95 duration-200">
+            {/* Záhlaví modálu: Číslo kartičky + Jméno + Křížek */}
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#A39284]">
+                ČÍSLO KARTIČKY
+              </span>
+              <div className="flex items-start justify-between gap-3 mt-0.5">
+                <h3 className="font-serif-heading text-xl sm:text-2xl font-bold text-[#F5EBE1] leading-tight">
+                  {scannedCustomer.card_number} • {scannedCustomer.full_name}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScannedCustomer(null);
+                    setActionResult(null);
+                  }}
+                  className="p-1 rounded-full text-[#A39284] hover:text-[#F5EBE1] hover:bg-[#221912] transition cursor-pointer shrink-0 mt-0.5"
+                  aria-label="Zavřít"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Vnitřní karta se stavem razítek */}
+            <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-[#221912] border border-[#3E3025]/80 space-y-4 sm:space-y-5">
+              {/* Lišta: káva X/10 */}
+              <div className="bg-[#2D221A]/80 rounded-xl px-4 py-2.5 flex items-center justify-between border border-[#3E3025]/40">
+                <span className="text-sm font-medium text-[#F5EBE1]">káva</span>
+                <span className="text-sm font-bold text-[#F5EBE1]">
+                  {scannedCustomer.coffee_count}/10
+                </span>
+              </div>
+
+              {/* Grid 10 razítek v rozložení 5x2 */}
+              <div className="grid grid-cols-5 gap-2.5 sm:gap-3 justify-items-center">
+                {Array.from({ length: 10 }).map((_, idx) => {
+                  const isStamped = idx < scannedCustomer.coffee_count;
+                  const isLast = idx === 9;
+                  return (
+                    <div
+                      key={idx}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                        isStamped
+                          ? 'bg-[#D89D60] text-[#1C140D] shadow-md shadow-[#D89D60]/20'
+                          : 'bg-[#2D221A] border border-dashed border-[#3E3025] text-[#3E3025]'
+                      }`}
+                    >
+                      {isStamped ? (
+                        <Coffee className="w-5 h-5 fill-current" />
+                      ) : isLast ? (
+                        <Star className="w-4 h-4 text-[#3E3025]" />
+                      ) : (
+                        <Coffee className="w-4 h-4 text-[#3E3025]/50" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Informace: Do kávy zdarma zbývá X */}
+              <div className="text-center pt-1">
+                <p className="font-serif-heading text-sm text-[#F5EBE1]">
+                  {scannedCustomer.coffee_count >= 10
+                    ? 'Zákazník má nárok na kávu zdarma!'
+                    : `Do kávy zdarma zbývá ${10 - scannedCustomer.coffee_count}`}
+                </p>
+              </div>
+
+              {/* Notifikace výsledku akce */}
+              {actionResult && (
+                <div
+                  className={`p-3 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
+                    actionResult.reward_redeemed
+                      ? 'bg-[#D89D60]/20 border-[#D89D60] text-[#D89D60] font-semibold'
+                      : 'bg-[#2D221A] border-[#D89D60]/50 text-[#F5EBE1]'
+                  }`}
+                >
+                  {actionResult.reward_redeemed ? (
+                    <Star className="w-4 h-4 text-[#D89D60] fill-current shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
+                  )}
+                  <span className="leading-snug">{actionResult.message}</span>
+                </div>
+              )}
+
+              {/* Tlačítka dole: Káva zdarma + Přidat kávu */}
+              <div className="flex items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  disabled={scannedCustomer.coffee_count < 10 || actionLoading}
+                  onClick={() => void handleConfirmAction(scannedCustomer.card_number)}
+                  className={`py-3.5 px-4 rounded-full text-xs font-bold transition flex items-center justify-center shrink-0 ${
+                    scannedCustomer.coffee_count >= 10
+                      ? 'bg-[#2D221A] hover:bg-[#D89D60] hover:text-[#1C140D] border-2 border-[#D89D60] text-[#D89D60] cursor-pointer shadow-lg shadow-[#D89D60]/20'
+                      : 'bg-[#2D221A]/50 border border-[#3E3025] text-[#A39284]/40 cursor-not-allowed'
+                  }`}
+                >
+                  <span>Káva zdarma</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => void handleConfirmAction(scannedCustomer.card_number)}
+                  className="flex-1 py-3.5 px-4 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xl shadow-[#D89D60]/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50"
+                >
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                  )}
+                  <span>Přidat kávu</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
