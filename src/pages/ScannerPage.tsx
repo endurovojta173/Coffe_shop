@@ -12,7 +12,6 @@ import {
   LogOut,
   Plus,
   QrCode,
-  Sparkles,
   Star,
   X,
 } from 'lucide-react';
@@ -109,26 +108,6 @@ export const ScannerPage: React.FC = () => {
     }
   };
 
-  // Obsluha kliknutí na tlačítko "Klepněte pro simulaci skenu"
-  const handleSimulationClick = () => {
-    setScanError(null);
-    if (manualCardNumber.trim()) {
-      void handleLookupCustomer(manualCardNumber);
-    } else if (customerProfiles.length > 0) {
-      // Vybereme pro simulaci první zákaznický profil (např. Jana S.) bez předvyplňování inputu
-      const sample = customerProfiles[0];
-      setScannedCustomer({
-        id: sample.id,
-        card_number: sample.card_number,
-        full_name: sample.full_name,
-        coffee_count: sample.coffee_count,
-      });
-      setActionResult(null);
-    } else {
-      setScanError('V systému zatím není registrován žádný zákazník pro simulaci.');
-    }
-  };
-
   // Potvrzení akce v modálním okně (přidat kávu / uplatnit odměnu)
   const handleConfirmAction = async (cardNumber: string) => {
     setActionLoading(true);
@@ -191,7 +170,7 @@ export const ScannerPage: React.FC = () => {
     } catch {
       setCameraActive(false);
       setCameraError(
-        'Kamera není v tomto prohlížeči/zařízení dostupná nebo nebyla povolena. Použijte tlačítko „Klepněte pro simulaci skenu“ níže.'
+        'Kamera není v tomto prohlížeči/zařízení dostupná nebo nebyla povolena. Můžete zadat číslo karty ručně níže.'
       );
     }
   };
@@ -273,23 +252,37 @@ export const ScannerPage: React.FC = () => {
 
           {/* Karta se čtvercovým hledáčkem */}
           <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
-            <div className="relative aspect-square w-full max-w-sm mx-auto rounded-3xl bg-[#221912] border-2 border-dashed border-[#D89D60]/60 overflow-hidden flex flex-col items-center justify-center">
+            {/* Skenovací oblast – sken lze spustit i kliknutím přímo na ni */}
+            <div
+              onClick={() => void toggleCamera()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  void toggleCamera();
+                }
+              }}
+              title={cameraActive ? 'Klepnutím zastavíte skenování' : 'Klepnutím spustíte skenování'}
+              aria-label={cameraActive ? 'Zastavit skenování' : 'Spustit skenování'}
+              className="relative aspect-square w-full max-w-sm mx-auto rounded-3xl bg-[#221912] border-2 border-dashed border-[#D89D60]/60 hover:border-[#D89D60] overflow-hidden flex flex-col items-center justify-center cursor-pointer transition group"
+            >
               <div id="barista-qr-reader" className="w-full h-full" />
 
               {!cameraActive && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                   <div className="w-40 h-40 sm:w-48 sm:h-48 relative flex items-center justify-center mb-3">
-                    <div className="absolute top-0 left-0 w-7 h-7 border-t-4 border-l-4 border-[#D89D60] rounded-tl-xl" />
-                    <div className="absolute top-0 right-0 w-7 h-7 border-t-4 border-r-4 border-[#D89D60] rounded-tr-xl" />
-                    <div className="absolute bottom-0 left-0 w-7 h-7 border-b-4 border-l-4 border-[#D89D60] rounded-bl-xl" />
-                    <div className="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-[#D89D60] rounded-br-xl" />
-                    <QrCode className="w-16 h-16 sm:w-20 sm:h-20 text-[#D89D60]/80" />
+                    <div className="absolute top-0 left-0 w-7 h-7 border-t-4 border-l-4 border-[#D89D60] rounded-tl-xl transition group-hover:scale-105" />
+                    <div className="absolute top-0 right-0 w-7 h-7 border-t-4 border-r-4 border-[#D89D60] rounded-tr-xl transition group-hover:scale-105" />
+                    <div className="absolute bottom-0 left-0 w-7 h-7 border-b-4 border-l-4 border-[#D89D60] rounded-bl-xl transition group-hover:scale-105" />
+                    <div className="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-[#D89D60] rounded-br-xl transition group-hover:scale-105" />
+                    <QrCode className="w-16 h-16 sm:w-20 sm:h-20 text-[#D89D60]/80 group-hover:text-[#D89D60] transition" />
                   </div>
-                  <p className="text-xs sm:text-sm font-medium text-[#F5EBE1]">
-                    Hledáček připraven ke skenování
+                  <p className="text-xs sm:text-sm font-semibold text-[#F5EBE1] group-hover:text-[#D89D60] transition">
+                    Klepnutím sem spustíte skenování
                   </p>
                   <p className="text-[11px] text-[#A39284] mt-1">
-                    Podporuje mobilní fotoaparát i pokladní webkameru
+                    Nebo použijte tlačítko Skenovat níže
                   </p>
                 </div>
               )}
@@ -302,31 +295,26 @@ export const ScannerPage: React.FC = () => {
               </div>
             )}
 
-            {/* Tlačítko pro simulaci skenu – otevře okno s přehledem karty */}
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={handleSimulationClick}
-                className="w-full py-3.5 sm:py-4 px-6 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-[#D89D60]/25 transition transform active:scale-[0.99] cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>Klepněte pro simulaci skenu</span>
-              </button>
-
+            {/* Pouze tlačítko Skenovat */}
+            <div>
               <button
                 type="button"
                 onClick={() => void toggleCamera()}
-                className="w-full py-3 px-5 rounded-full bg-[#221912] hover:border-[#D89D60] border border-[#3E3025] text-xs font-semibold text-[#F5EBE1] flex items-center justify-center gap-2 transition cursor-pointer"
+                className={`w-full py-3.5 sm:py-4 px-6 rounded-full font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl transition transform active:scale-[0.99] cursor-pointer ${
+                  cameraActive
+                    ? 'bg-[#221912] hover:border-[#D96B6B] border border-[#3E3025] text-[#D96B6B]'
+                    : 'bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] shadow-[#D89D60]/25'
+                }`}
               >
                 {cameraActive ? (
                   <>
-                    <CameraOff className="w-4 h-4 text-[#D96B6B]" />
-                    <span>Vypnout kameru</span>
+                    <CameraOff className="w-4 h-4 sm:w-5 sm:h-5 text-[#D96B6B]" />
+                    <span>Zastavit skenování</span>
                   </>
                 ) : (
                   <>
-                    <Camera className="w-4 h-4 text-[#D89D60]" />
-                    <span>Spustit živou kameru</span>
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Skenovat</span>
                   </>
                 )}
               </button>
