@@ -59,8 +59,12 @@ For security reasons, any standard self-registration in the app automatically as
 
 Open the **SQL Editor** in your Supabase project dashboard, paste the relevant query, and click **Run**:
 
+> **Note:** To prevent unauthorized role escalation from the web client, the database has an automatic trigger guard (`protect_profile_sensitive_columns`). Prefix your SQL queries with `SET app.bypass_profile_guard = 'on';` when promoting roles directly in the SQL editor:
+
 #### Promote an existing user to Administrator (`admin`):
 ```sql
+SET app.bypass_profile_guard = 'on';
+
 UPDATE public.profiles
 SET role = 'admin'
 WHERE email = 'admin@yourcoffeeshop.cz';
@@ -68,9 +72,24 @@ WHERE email = 'admin@yourcoffeeshop.cz';
 
 #### Promote an existing user to Barista (`staff`):
 ```sql
+SET app.bypass_profile_guard = 'on';
+
 UPDATE public.profiles
 SET role = 'staff'
 WHERE email = 'barista@yourcoffeeshop.cz';
+```
+
+#### Promote multiple team members at once:
+```sql
+SET app.bypass_profile_guard = 'on';
+
+UPDATE public.profiles
+SET role = 'staff'
+WHERE email = 'barista@yourcoffeeshop.cz';
+
+UPDATE public.profiles
+SET role = 'admin'
+WHERE email = 'admin@yourcoffeeshop.cz';
 ```
 
 #### View all registered users and their assigned roles:

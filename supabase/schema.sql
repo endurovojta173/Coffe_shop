@@ -211,16 +211,35 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  IF current_setting('app.bypass_profile_guard', true) IS DISTINCT FROM 'on' THEN
-    IF public.get_my_role() IS DISTINCT FROM 'admin' THEN
-      IF NEW.role IS DISTINCT FROM OLD.role THEN
-        RAISE EXCEPTION 'Nelze měnit uživatelskou roli přímo.';
-      END IF;
-      IF NEW.coffee_count IS DISTINCT FROM OLD.coffee_count THEN
-        RAISE EXCEPTION 'Stav káv lze měnit pouze přes RPC funkci scan_customer_card.';
-      END IF;
-    END IF;
+  -- 1. Povolit změny při explicitním nastavení bypassu
+  IF current_setting('app.bypass_profile_guard', true) = 'on' THEN
+    RETURN NEW;
   END IF;
+
+  -- 2. Povolit změny pro databázového superusera (SQL Editor, migrace v dashboardu)
+  IF current_user IN ('postgres', 'supabase_admin') THEN
+    RETURN NEW;
+  END IF;
+
+  -- 3. Povolit změny pro service_role (např. Supabase Table Editor nebo backend skripty)
+  IF (auth.jwt() ->> 'role') = 'service_role' THEN
+    RETURN NEW;
+  END IF;
+
+  -- 4. Povolit změny, pokud je přihlášený uživatel administrátor aplikace
+  IF public.get_my_role() = 'admin' THEN
+    RETURN NEW;
+  END IF;
+
+  -- Zákaz přímé změny role a počtu káv pro běžné klienty
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    RAISE EXCEPTION 'Nelze měnit uživatelskou roli přímo.';
+  END IF;
+
+  IF NEW.coffee_count IS DISTINCT FROM OLD.coffee_count THEN
+    RAISE EXCEPTION 'Stav káv lze měnit pouze přes RPC funkci scan_customer_card.';
+  END IF;
+
   RETURN NEW;
 END;
 $$;
