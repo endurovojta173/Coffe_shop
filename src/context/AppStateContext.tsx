@@ -61,6 +61,7 @@ interface AppStateContextValue {
   updatePassword: (newPassword: string) => Promise<{ ok: boolean; error?: string }>;
   deleteCurrentUserAccount: () => Promise<{ ok: boolean; error?: string }>;
   scanCustomerCard: (cardNumber: string) => Promise<ScanCardResult>;
+  redeemCustomerReward: (cardNumber: string) => Promise<ScanCardResult>;
   saveMenuChanges: (
     nextCategories: Category[],
     nextMenuItems: MenuItem[],
@@ -546,6 +547,32 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     [refreshData]
   );
 
+  const redeemCustomerReward = useCallback(
+    async (cardNumber: string): Promise<ScanCardResult> => {
+      const client = requireSupabase();
+      const { data, error } = await client.rpc('redeem_free_coffee' as never, {
+        card_num: cardNumber.trim(),
+      } as never);
+
+      if (error) {
+        if (error.message.includes('redeem_free_coffee') || (error as { code?: string }).code === '42883') {
+          throw new Error(
+            'Funkce pro uplatnění kávy zdarma (redeem_free_coffee) ještě nebyla vytvořena v Supabase. Spusťte prosím SQL migraci ze souboru supabase/schema.sql v Supabase SQL Editoru.'
+          );
+        }
+        throw new Error(error.message);
+      }
+      if (!data) {
+        throw new Error('RPC funkce redeem_free_coffee nevrátila žádná data.');
+      }
+
+      const result = data as ScanCardResult;
+      await refreshData();
+      return result;
+    },
+    [refreshData]
+  );
+
   const saveMenuChanges = useCallback(
     async (
       nextCategories: Category[],
@@ -689,6 +716,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       updatePassword,
       deleteCurrentUserAccount,
       scanCustomerCard,
+      redeemCustomerReward,
       saveMenuChanges,
       addEvent,
       deleteEvent,
@@ -716,6 +744,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       updatePassword,
       deleteCurrentUserAccount,
       scanCustomerCard,
+      redeemCustomerReward,
       saveMenuChanges,
       addEvent,
       deleteEvent,

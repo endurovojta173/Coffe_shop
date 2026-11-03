@@ -256,7 +256,8 @@ CREATE POLICY "Loyalty logs select own or staff/admin" ON public.loyalty_logs FO
   USING (customer_id = auth.uid() OR public.get_my_role() IN ('staff', 'admin'));
 
 -- =============================================================================
--- RPC Funkce: scan_customer_card(card_num TEXT)
+-- RPC Funkce: scan_customer_card(card_num TEXT) - přičtení bonusové kávy
+-- Zákazník může sbírat neomezeně káv (např. 10, 11, 20 káv).
 -- =============================================================================
 CREATE OR REPLACE FUNCTION public.scan_customer_card(card_num TEXT)
 RETURNS JSONB
@@ -268,8 +269,7 @@ DECLARE
   v_customer public.profiles%ROWTYPE;
   v_normalized_input TEXT;
   v_new_count INT;
-  v_action loyalty_action;
-  v_reward_redeemed BOOLEAN := false;
+  v_free_coffees INT;
 BEGIN
   -- 1. Ověření oprávnění volajícího (pouze staff nebo admin)
   SELECT role INTO v_caller_role FROM public.profiles WHERE id = auth.uid();
@@ -293,23 +293,17 @@ BEGIN
   -- Povolení interní úpravy coffee_count v rámci této transakce
   PERFORM set_config('app.bypass_profile_guard', 'on', true);
 
-  -- 3. Inkrementace bodů a vyhodnocení 10. kávy zdarma
-  IF v_customer.coffee_count + 1 >= 10 THEN
-    v_new_count := 0;
-    v_action := 'redeem_reward';
-    v_reward_redeemed := true;
-  ELSE
-    v_new_count := v_customer.coffee_count + 1;
-    v_action := 'add_point';
-    v_reward_redeemed := false;
-  END IF;
+  -- 3. Inkrementace bodů (zákazník sbírá dál i nad 10 káv)
+  v_new_count := v_customer.coffee_count + 1;
 
   UPDATE public.profiles
   SET coffee_count = v_new_count
   WHERE id = v_customer.id;
 
   INSERT INTO public.loyalty_logs (customer_id, staff_id, action)
-  VALUES (v_customer.id, auth.uid(), v_action);
+  VALUES (v_customer.id, auth.uid(), 'add_point');
+
+  v_free_coffees := FLOOR(v_new_count / 10);
 
   RETURN jsonb_build_object(
     'customer_id', v_customer.id,
@@ -317,11 +311,88 @@ BEGIN
     'card_number', v_customer.card_number,
     'previous_count', v_customer.coffee_count,
     'new_count', v_new_count,
-    'action', v_action,
-    'reward_redeemed', v_reward_redeemed,
+    'action', 'add_point',
+    'reward_redeemed', false,
+    'free_coffees_available', v_free_coffees,
     'message', CASE
-      WHEN v_reward_redeemed THEN 'Gratulujeme! 10. káva zdarma byla uplatněna a počítadlo vyresetováno.'
-      ELSE format('Připsán 1 bod. Aktuální stav: %s/10 káv.', v_new_count)
+      WHEN v_free_coffees = 1 THEN format('Bod za kávu byl připsán (celkem %s káv). Zákazník má nárok na 1 kávu zdarma!', v_new_count)
+      WHEN v_free_coffees BETWEEN 2 AND 4 THEN format('Bod za kávu byl připsán (celkem %s káv). Zákazník má nárok na %s kávy zdarma!', v_new_count, v_free_coffees)
+      WHEN v_free_coffees >= 5 THEN format('Bod za kávu byl připsán (celkem %s káv). Zákazník má nárok na %s káv zdarma!', v_new_count, v_free_coffees)
+      ELSE format('Bod za kávu byl úspěšně připsán (celkem %s káv, do odměny zbývá %s).', v_new_count, 10 - (v_new_count % 10))
+    END
+  );
+END;
+$$;
+
+-- =============================================================================
+-- RPC Funkce: redeem_free_coffee(card_num TEXT) - uplatnění 1 kávy zdarma
+-- Odečte 10 káv zákazníkovi pouze v případě, že má coffee_count >= 10.
+-- =============================================================================
+CREATE OR REPLACE FUNCTION public.redeem_free_coffee(card_num TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_caller_role user_role;
+  v_customer public.profiles%ROWTYPE;
+  v_normalized_input TEXT;
+  v_new_count INT;
+  v_free_coffees INT;
+BEGIN
+  -- 1. Ověření oprávnění volajícího (pouze staff nebo admin)
+  SELECT role INTO v_caller_role FROM public.profiles WHERE id = auth.uid();
+  IF v_caller_role IS NULL OR v_caller_role NOT IN ('staff', 'admin') THEN
+    RAISE EXCEPTION 'Přístup odepřen: Pouze barista nebo správce může uplatňovat odměny.';
+  END IF;
+
+  -- Normalizace čísla karty
+  v_normalized_input := regexp_replace(trim(card_num), '\s+', '', 'g');
+
+  -- 2. Vyhledání zákazníka
+  SELECT * INTO v_customer
+  FROM public.profiles
+  WHERE regexp_replace(card_number, '\s+', '', 'g') = v_normalized_input
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Zákaznická karta s číslem "%" nebyla nalezena.', card_num;
+  END IF;
+
+  -- 3. Ověření minimálního počtu káv (alespoň 10 káv pro 1 kávu zdarma)
+  IF v_customer.coffee_count < 10 THEN
+    RAISE EXCEPTION 'Zákazník nemá dostatek káv pro uplatnění odměny (má pouze %s káv, minimum pro kávu zdarma je 10).', v_customer.coffee_count;
+  END IF;
+
+  -- Povolení interní úpravy coffee_count
+  PERFORM set_config('app.bypass_profile_guard', 'on', true);
+
+  -- 4. Odečtení 10 káv za 1 uplatněnou odměnu
+  v_new_count := v_customer.coffee_count - 10;
+
+  UPDATE public.profiles
+  SET coffee_count = v_new_count
+  WHERE id = v_customer.id;
+
+  INSERT INTO public.loyalty_logs (customer_id, staff_id, action)
+  VALUES (v_customer.id, auth.uid(), 'redeem_reward');
+
+  v_free_coffees := FLOOR(v_new_count / 10);
+
+  RETURN jsonb_build_object(
+    'customer_id', v_customer.id,
+    'full_name', v_customer.full_name,
+    'card_number', v_customer.card_number,
+    'previous_count', v_customer.coffee_count,
+    'new_count', v_new_count,
+    'action', 'redeem_reward',
+    'reward_redeemed', true,
+    'free_coffees_available', v_free_coffees,
+    'message', CASE
+      WHEN v_free_coffees = 1 THEN format('Káva zdarma byla úspěšně uplatněna (-10 káv)! Zákazníkovi zbývá %s káv (stále nárok na 1 další kávu zdarma).', v_new_count)
+      WHEN v_free_coffees BETWEEN 2 AND 4 THEN format('Káva zdarma byla úspěšně uplatněna (-10 káv)! Zákazníkovi zbývá %s káv (stále nárok na %s další kávy zdarma).', v_new_count, v_free_coffees)
+      WHEN v_free_coffees >= 5 THEN format('Káva zdarma byla úspěšně uplatněna (-10 káv)! Zákazníkovi zbývá %s káv (stále nárok na %s dalších káv zdarma).', v_new_count, v_free_coffees)
+      ELSE format('Káva zdarma byla úspěšně uplatněna (-10 káv)! Zákazníkovi zbývá %s káv (do další odměny zbývá %s).', v_new_count, 10 - (v_new_count % 10))
     END
   );
 END;

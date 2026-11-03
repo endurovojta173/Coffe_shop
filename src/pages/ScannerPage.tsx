@@ -18,6 +18,7 @@ import {
 import { useAppState } from '../context/AppStateContext';
 import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
 import { supabase } from '../lib/supabase';
+import { getLoyaltyStatus } from '../lib/loyalty';
 import type { ScanCardResult } from '../lib/database.types';
 
 interface ModalCustomerState {
@@ -33,6 +34,7 @@ export const ScannerPage: React.FC = () => {
     profiles,
     loyaltyLogs,
     scanCustomerCard,
+    redeemCustomerReward,
     logout,
   } = useAppState();
   const navigate = useNavigate();
@@ -108,8 +110,8 @@ export const ScannerPage: React.FC = () => {
     }
   };
 
-  // Potvrzení akce v modálním okně (přidat kávu / uplatnit odměnu)
-  const handleConfirmAction = async (cardNumber: string) => {
+  // Připsání bodu za kávu (+1 káva) – zákazník může sbírat i nad 10 káv
+  const handleAddCoffee = async (cardNumber: string) => {
     setActionLoading(true);
     setScanError(null);
     try {
@@ -128,6 +130,32 @@ export const ScannerPage: React.FC = () => {
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Chyba při připsání kávy.';
+      setScanError(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Uplatnění 1 kávy zdarma (-10 káv) – pouze pokud má zákazník >= 10 káv
+  const handleRedeemReward = async (cardNumber: string) => {
+    setActionLoading(true);
+    setScanError(null);
+    try {
+      const res = await redeemCustomerReward(cardNumber);
+      setActionResult(res);
+      setLastResult(res);
+
+      // Aktualizace lokálního počítadla v modálu dle výsledku
+      setScannedCustomer((prev) =>
+        prev
+          ? {
+              ...prev,
+              coffee_count: res.new_count,
+            }
+          : null
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Chyba při uplatnění odměny.';
       setScanError(msg);
     } finally {
       setActionLoading(false);
@@ -493,98 +521,121 @@ export const ScannerPage: React.FC = () => {
             </div>
 
             {/* Vnitřní karta se stavem razítek */}
-            <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-[#221912] border border-[#3E3025]/80 space-y-4 sm:space-y-5">
-              {/* Lišta: káva X/10 */}
-              <div className="bg-[#2D221A]/80 rounded-xl px-4 py-2.5 flex items-center justify-between border border-[#3E3025]/40">
-                <span className="text-sm font-medium text-[#F5EBE1]">káva</span>
-                <span className="text-sm font-bold text-[#F5EBE1]">
-                  {scannedCustomer.coffee_count}/10
-                </span>
-              </div>
+            {(() => {
+              const status = getLoyaltyStatus(scannedCustomer.coffee_count, 'cs');
+              return (
+                <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-[#221912] border border-[#3E3025]/80 space-y-4 sm:space-y-5">
+                  {/* Lišta: káva X/10 nebo X celkem */}
+                  <div className="bg-[#2D221A]/80 rounded-xl px-4 py-2.5 flex items-center justify-between border border-[#3E3025]/40">
+                    <span className="text-sm font-medium text-[#F5EBE1]">káva</span>
+                    <span className="text-sm font-bold text-[#F5EBE1]">
+                      {status.freeCoffees === 0
+                        ? `${status.count}/10`
+                        : `${status.count} celkem (${status.currentInCycle === 0 ? 10 : status.currentInCycle}/10)`}
+                    </span>
+                  </div>
 
-              {/* Grid 10 razítek v rozložení 5x2 */}
-              <div className="grid grid-cols-5 gap-2.5 sm:gap-3 justify-items-center">
-                {Array.from({ length: 10 }).map((_, idx) => {
-                  const isStamped = idx < scannedCustomer.coffee_count;
-                  const isLast = idx === 9;
-                  return (
+                  {/* Zvýrazněný badge pro nárok na kávu zdarma */}
+                  {status.freeCoffees > 0 && (
+                    <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full bg-[#D89D60]/20 border border-[#D89D60] text-xs font-bold text-[#D89D60]">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span>{status.staffText}</span>
+                    </div>
+                  )}
+
+                  {/* Grid 10 razítek v rozložení 5x2 */}
+                  <div className="grid grid-cols-5 gap-2.5 sm:gap-3 justify-items-center">
+                    {Array.from({ length: 10 }).map((_, idx) => {
+                      const isStamped =
+                        status.freeCoffees === 0
+                          ? idx < status.count
+                          : status.currentInCycle === 0
+                          ? true
+                          : idx < status.currentInCycle;
+                      const isLast = idx === 9;
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                            isStamped
+                              ? 'bg-[#D89D60] text-[#1C140D] shadow-md shadow-[#D89D60]/20'
+                              : 'bg-[#2D221A] border border-dashed border-[#3E3025] text-[#3E3025]'
+                          }`}
+                        >
+                          {isStamped ? (
+                            <Coffee className="w-5 h-5 fill-current" />
+                          ) : isLast ? (
+                            <Star className="w-4 h-4 text-[#3E3025]" />
+                          ) : (
+                            <Coffee className="w-4 h-4 text-[#3E3025]/50" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Informace: Do kávy zdarma zbývá X nebo Zákazník má nárok na X káv zdarma */}
+                  <div className="text-center pt-1">
+                    <p className="font-serif-heading text-sm text-[#F5EBE1]">
+                      {status.staffText}
+                    </p>
+                    {status.freeCoffees > 0 && status.currentInCycle > 0 && (
+                      <p className="text-[11px] text-[#A39284] mt-0.5 font-sans">
+                        (Do další kávy zdarma zbývá {status.remainder} káv)
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Notifikace výsledku akce */}
+                  {actionResult && (
                     <div
-                      key={idx}
-                      className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
-                        isStamped
-                          ? 'bg-[#D89D60] text-[#1C140D] shadow-md shadow-[#D89D60]/20'
-                          : 'bg-[#2D221A] border border-dashed border-[#3E3025] text-[#3E3025]'
+                      className={`p-3 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
+                        actionResult.reward_redeemed
+                          ? 'bg-[#D89D60]/20 border-[#D89D60] text-[#D89D60] font-semibold'
+                          : 'bg-[#2D221A] border-[#D89D60]/50 text-[#F5EBE1]'
                       }`}
                     >
-                      {isStamped ? (
-                        <Coffee className="w-5 h-5 fill-current" />
-                      ) : isLast ? (
-                        <Star className="w-4 h-4 text-[#3E3025]" />
+                      {actionResult.reward_redeemed ? (
+                        <Star className="w-4 h-4 text-[#D89D60] fill-current shrink-0" />
                       ) : (
-                        <Coffee className="w-4 h-4 text-[#3E3025]/50" />
+                        <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
                       )}
+                      <span className="leading-snug">{actionResult.message}</span>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Informace: Do kávy zdarma zbývá X */}
-              <div className="text-center pt-1">
-                <p className="font-serif-heading text-sm text-[#F5EBE1]">
-                  {scannedCustomer.coffee_count >= 10
-                    ? 'Zákazník má nárok na kávu zdarma!'
-                    : `Do kávy zdarma zbývá ${10 - scannedCustomer.coffee_count}`}
-                </p>
-              </div>
-
-              {/* Notifikace výsledku akce */}
-              {actionResult && (
-                <div
-                  className={`p-3 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
-                    actionResult.reward_redeemed
-                      ? 'bg-[#D89D60]/20 border-[#D89D60] text-[#D89D60] font-semibold'
-                      : 'bg-[#2D221A] border-[#D89D60]/50 text-[#F5EBE1]'
-                  }`}
-                >
-                  {actionResult.reward_redeemed ? (
-                    <Star className="w-4 h-4 text-[#D89D60] fill-current shrink-0" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
                   )}
-                  <span className="leading-snug">{actionResult.message}</span>
+
+                  {/* Tlačítka dole: Káva zdarma + Přidat kávu */}
+                  <div className="flex items-center gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      disabled={status.freeCoffees === 0 || actionLoading}
+                      onClick={() => void handleRedeemReward(scannedCustomer.card_number)}
+                      className={`py-3.5 px-4 rounded-full text-xs font-bold transition flex items-center justify-center shrink-0 ${
+                        status.freeCoffees > 0
+                          ? 'bg-[#2D221A] hover:bg-[#D89D60] hover:text-[#1C140D] border-2 border-[#D89D60] text-[#D89D60] cursor-pointer shadow-lg shadow-[#D89D60]/20 active:scale-95'
+                          : 'bg-[#2D221A]/50 border border-[#3E3025] text-[#A39284]/40 cursor-not-allowed'
+                      }`}
+                    >
+                      <span>{status.freeCoffeeLabel}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => void handleAddCoffee(scannedCustomer.card_number)}
+                      className="flex-1 py-3.5 px-4 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xl shadow-[#D89D60]/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50"
+                    >
+                      {actionLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 stroke-[3]" />
+                      )}
+                      <span>Přidat kávu</span>
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Tlačítka dole: Káva zdarma + Přidat kávu */}
-              <div className="flex items-center gap-2.5 pt-1">
-                <button
-                  type="button"
-                  disabled={scannedCustomer.coffee_count < 10 || actionLoading}
-                  onClick={() => void handleConfirmAction(scannedCustomer.card_number)}
-                  className={`py-3.5 px-4 rounded-full text-xs font-bold transition flex items-center justify-center shrink-0 ${
-                    scannedCustomer.coffee_count >= 10
-                      ? 'bg-[#2D221A] hover:bg-[#D89D60] hover:text-[#1C140D] border-2 border-[#D89D60] text-[#D89D60] cursor-pointer shadow-lg shadow-[#D89D60]/20'
-                      : 'bg-[#2D221A]/50 border border-[#3E3025] text-[#A39284]/40 cursor-not-allowed'
-                  }`}
-                >
-                  <span>Káva zdarma</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={actionLoading}
-                  onClick={() => void handleConfirmAction(scannedCustomer.card_number)}
-                  className="flex-1 py-3.5 px-4 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xl shadow-[#D89D60]/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50"
-                >
-                  {actionLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4 stroke-[3]" />
-                  )}
-                  <span>Přidat kávu</span>
-                </button>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
       )}

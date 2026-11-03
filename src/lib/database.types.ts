@@ -57,6 +57,7 @@ export interface ScanCardResult {
   new_count: number;
   action: LoyaltyAction;
   reward_redeemed: boolean;
+  free_coffees_available?: number;
   message: string;
 }
 
@@ -96,6 +97,10 @@ export interface Database {
     };
     Functions: {
       scan_customer_card: {
+        Args: { card_num: string };
+        Returns: ScanCardResult;
+      };
+      redeem_free_coffee: {
         Args: { card_num: string };
         Returns: ScanCardResult;
       };

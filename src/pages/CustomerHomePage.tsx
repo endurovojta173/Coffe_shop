@@ -14,6 +14,7 @@ import {
 import { useAppState } from '../context/AppStateContext';
 import { useLanguage } from '../context/LanguageContext';
 import { CAFE_BRANCHES } from '../lib/branches';
+import { getLoyaltyStatus } from '../lib/loyalty';
 
 function formatCzechEventDate(isoString: string): { date: string; time: string } {
   try {
@@ -36,11 +37,11 @@ function formatCzechEventDate(isoString: string): { date: string; time: string }
 
 export const CustomerHomePage: React.FC = () => {
   const { currentUser, events, setCardModalOpen } = useAppState();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const coffeeCount = currentUser?.coffee_count ?? 7;
   const cardNumber = currentUser?.card_number ?? '0042 1187';
-  const remaining = Math.max(0, 10 - coffeeCount);
+  const status = getLoyaltyStatus(coffeeCount, language);
 
   return (
     <div className="space-y-8">
@@ -80,22 +81,39 @@ export const CustomerHomePage: React.FC = () => {
                 {t('card.cardNumber')}: {cardNumber}
               </p>
             </div>
-            <div className="text-right bg-[#221912] border border-[#3E3025] px-4 py-2.5 rounded-2xl">
-              <span className="text-2xl font-bold text-[#D89D60] block leading-none">
-                {coffeeCount}/10
+            <div className="text-right bg-[#221912] border border-[#3E3025] px-4 py-2.5 rounded-2xl shrink-0">
+              <span className="text-xl sm:text-2xl font-bold text-[#D89D60] block leading-none">
+                {status.freeCoffees === 0 ? `${status.count}/10` : `${status.count}`}
               </span>
               <span className="text-[11px] text-[#A39284]">
-                {coffeeCount === 10 ? '✓' : `${10 - coffeeCount} left`}
+                {status.freeCoffees > 0
+                  ? `${status.freeCoffees}× ZDARMA`
+                  : `${status.remainder} zbývá`}
               </span>
             </div>
           </div>
+
+          {/* Zvýrazněný banner při nároku na kávu zdarma */}
+          {status.freeCoffees > 0 && (
+            <div className="mb-5 p-3.5 rounded-2xl bg-[#D89D60]/20 border border-[#D89D60] flex items-center gap-2.5">
+              <Star className="w-5 h-5 text-[#D89D60] fill-current shrink-0" />
+              <span className="text-xs sm:text-sm font-bold text-[#D89D60]">
+                {status.customerText}
+              </span>
+            </div>
+          )}
 
           {/* Grid 5x2 pro 10 káv, 10. pozice jako odměna (hvězda) */}
           <div className="grid grid-cols-5 gap-3 my-6">
             {Array.from({ length: 10 }).map((_, idx) => {
               const pos = idx + 1;
               const isTenth = pos === 10;
-              const isCollected = pos <= coffeeCount;
+              const isCollected =
+                status.freeCoffees === 0
+                  ? pos <= status.count
+                  : status.currentInCycle === 0
+                  ? true
+                  : pos <= status.currentInCycle;
 
               return (
                 <div
@@ -126,19 +144,25 @@ export const CustomerHomePage: React.FC = () => {
             <div className="flex items-center justify-between text-xs mb-2">
               <span className="text-[#A39284]">Postup k odměně</span>
               <span className="font-semibold text-[#F5EBE1]">
-                {coffeeCount * 10} %
+                {status.freeCoffees > 0 && status.currentInCycle === 0
+                  ? 100
+                  : status.currentInCycle * 10} %
               </span>
             </div>
             <div className="w-full h-2.5 bg-[#1C140D] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#D89D60] rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, coffeeCount * 10)}%` }}
+                style={{
+                  width: `${
+                    status.freeCoffees > 0 && status.currentInCycle === 0
+                      ? 100
+                      : status.currentInCycle * 10
+                  }%`,
+                }}
               />
             </div>
             <p className="text-xs text-[#A39284] mt-2.5">
-              {remaining === 0
-                ? t('home.freeCoffeeReady')
-                : t('home.rewardsProgress', { count: remaining })}
+              {status.customerText}
             </p>
           </div>
 
