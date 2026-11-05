@@ -1,18 +1,20 @@
 /**
  * Pomocné funkce pro výpočet a formátování věrnostního programu (kávy zdarma).
  * Zákazník může sbírat neomezeně káv nad 10 (např. 10, 11, 20 káv).
- * Za každých celých 10 káv má nárok na 1 kávu zdarma.
+ * Počítadlo se NIKDY při 10 kávách automaticky nevynuluje.
+ * Káva zdarma se uplatní pouze tehdy, když obsluha klikne na tlačítko "Káva zdarma",
+ * což odečte 10 káv.
  */
 
 export interface LoyaltyStatus {
   count: number;
   freeCoffees: number;
   remainder: number;
-  currentInCycle: number;
   customerText: string;
   staffText: string;
   badgeText: string;
   freeCoffeeLabel: string;
+  isCardComplete: boolean;
 }
 
 export function getLoyaltyStatus(
@@ -21,13 +23,13 @@ export function getLoyaltyStatus(
 ): LoyaltyStatus {
   const safeCount = Math.max(0, count);
   const freeCoffees = Math.floor(safeCount / 10);
-  const remainder = 10 - (safeCount % 10);
-  const currentInCycle = safeCount % 10;
+  const isCardComplete = safeCount >= 10;
+  const remainder = isCardComplete ? 0 : Math.max(0, 10 - safeCount);
 
   let customerText = '';
   let staffText = '';
   let badgeText = '';
-  let freeCoffeeLabel = '';
+  let freeCoffeeLabel = 'Káva zdarma';
 
   if (lang === 'cs') {
     if (freeCoffees === 0) {
@@ -42,28 +44,25 @@ export function getLoyaltyStatus(
       freeCoffeeLabel = 'Káva zdarma';
     } else if (freeCoffees === 1) {
       customerText =
-        currentInCycle === 0
+        safeCount === 10
           ? 'Máte nárok na 1 kávu zdarma!'
-          : `Máte nárok na 1 kávu zdarma! (do další zbývá ${remainder})`;
-      staffText = 'Zákazník má nárok na 1 kávu zdarma';
+          : `Máte nárok na 1 kávu zdarma! (celkem ${safeCount} káv)`;
+      staffText =
+        safeCount === 10
+          ? 'Zákazník má nárok na 1 kávu zdarma'
+          : `Zákazník má nárok na 1 kávu zdarma (${safeCount} káv)`;
       badgeText = `${safeCount} káv • 1× ZDARMA`;
-      freeCoffeeLabel = 'Uplatnit kávu zdarma (1)';
+      freeCoffeeLabel = 'Káva zdarma';
     } else if (freeCoffees >= 2 && freeCoffees <= 4) {
-      customerText =
-        currentInCycle === 0
-          ? `Máte nárok na ${freeCoffees} kávy zdarma!`
-          : `Máte nárok na ${freeCoffees} kávy zdarma! (do další zbývá ${remainder})`;
-      staffText = `Zákazník má nárok na ${freeCoffees} kávy zdarma`;
+      customerText = `Máte nárok na ${freeCoffees} kávy zdarma! (celkem ${safeCount} káv)`;
+      staffText = `Zákazník má nárok na ${freeCoffees} kávy zdarma (${safeCount} káv)`;
       badgeText = `${safeCount} káv • ${freeCoffees}× ZDARMA`;
-      freeCoffeeLabel = `Uplatnit kávu zdarma (${freeCoffees})`;
+      freeCoffeeLabel = `Káva zdarma (${freeCoffees})`;
     } else {
-      customerText =
-        currentInCycle === 0
-          ? `Máte nárok na ${freeCoffees} káv zdarma!`
-          : `Máte nárok na ${freeCoffees} káv zdarma! (do další zbývá ${remainder})`;
-      staffText = `Zákazník má nárok na ${freeCoffees} káv zdarma`;
+      customerText = `Máte nárok na ${freeCoffees} káv zdarma! (celkem ${safeCount} káv)`;
+      staffText = `Zákazník má nárok na ${freeCoffees} káv zdarma (${safeCount} káv)`;
       badgeText = `${safeCount} káv • ${freeCoffees}× ZDARMA`;
-      freeCoffeeLabel = `Uplatnit kávu zdarma (${freeCoffees})`;
+      freeCoffeeLabel = `Káva zdarma (${freeCoffees})`;
     }
   } else if (lang === 'en') {
     if (freeCoffees === 0) {
@@ -76,20 +75,17 @@ export function getLoyaltyStatus(
       freeCoffeeLabel = 'Free coffee';
     } else if (freeCoffees === 1) {
       customerText =
-        currentInCycle === 0
+        safeCount === 10
           ? 'You are eligible for 1 free coffee!'
-          : `You are eligible for 1 free coffee! (${remainder} left until next)`;
+          : `You are eligible for 1 free coffee! (${safeCount} coffees total)`;
       staffText = 'Customer is eligible for 1 free coffee';
       badgeText = `${safeCount} coffees • 1× FREE`;
-      freeCoffeeLabel = 'Redeem free coffee (1)';
+      freeCoffeeLabel = 'Free coffee';
     } else {
-      customerText =
-        currentInCycle === 0
-          ? `You are eligible for ${freeCoffees} free coffees!`
-          : `You are eligible for ${freeCoffees} free coffees! (${remainder} left until next)`;
+      customerText = `You are eligible for ${freeCoffees} free coffees! (${safeCount} coffees total)`;
       staffText = `Customer is eligible for ${freeCoffees} free coffees`;
       badgeText = `${safeCount} coffees • ${freeCoffees}× FREE`;
-      freeCoffeeLabel = `Redeem free coffee (${freeCoffees})`;
+      freeCoffeeLabel = `Free coffee (${freeCoffees})`;
     }
   } else {
     // ko (Korean)
@@ -99,13 +95,10 @@ export function getLoyaltyStatus(
       badgeText = `${safeCount}/10`;
       freeCoffeeLabel = '무료 커피';
     } else {
-      customerText =
-        currentInCycle === 0
-          ? `무료 커피 ${freeCoffees}잔 혜택이 있습니다!`
-          : `무료 커피 ${freeCoffees}잔 혜택이 있습니다! (다음 무료까지 ${remainder}잔)`;
+      customerText = `무료 커피 ${freeCoffees}잔 혜택이 있습니다! (총 ${safeCount}잔)`;
       staffText = `무료 커피 ${freeCoffees}잔 수령 가능`;
       badgeText = `${safeCount}잔 • 무료 ${freeCoffees}잔`;
-      freeCoffeeLabel = `무료 커피 사용 (${freeCoffees})`;
+      freeCoffeeLabel = `무료 커피 (${freeCoffees})`;
     }
   }
 
@@ -113,11 +106,10 @@ export function getLoyaltyStatus(
     count: safeCount,
     freeCoffees,
     remainder,
-    currentInCycle,
     customerText,
     staffText,
     badgeText,
     freeCoffeeLabel,
+    isCardComplete,
   };
 }
-

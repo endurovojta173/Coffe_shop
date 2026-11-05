@@ -85,11 +85,7 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
                   const position = index + 1;
                   const isTenth = position === 10;
                   const isFilled =
-                    status.freeCoffees === 0
-                      ? position <= status.count
-                      : status.currentInCycle === 0
-                      ? true
-                      : position <= status.currentInCycle;
+                    status.count >= 10 ? true : position <= status.count;
 
                   return (
                     <div

@@ -119,6 +119,12 @@ export const ScannerPage: React.FC = () => {
       setActionResult(res);
       setLastResult(res);
 
+      if (res.reward_redeemed && res.new_count === 0 && scannedCustomer && scannedCustomer.coffee_count >= 9) {
+        setScanError(
+          'Upozornění: Vaše databáze Supabase stále běží na původní verzi funkce scan_customer_card, která při 10 kávách počítadlo vynulovala. Vložte a spusťte prosím SQL skript v Supabase SQL Editoru, aby se káva nevynulovala a zákazník mohl sbírat více jak 10 káv.'
+        );
+      }
+
       // Aktualizace lokálního počítadla v modálu dle výsledku
       setScannedCustomer((prev) =>
         prev
@@ -525,13 +531,13 @@ export const ScannerPage: React.FC = () => {
               const status = getLoyaltyStatus(scannedCustomer.coffee_count, 'cs');
               return (
                 <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-[#221912] border border-[#3E3025]/80 space-y-4 sm:space-y-5">
-                  {/* Lišta: káva X/10 nebo X celkem */}
+                  {/* Lišta: káva X/10 nebo X káv celkem */}
                   <div className="bg-[#2D221A]/80 rounded-xl px-4 py-2.5 flex items-center justify-between border border-[#3E3025]/40">
                     <span className="text-sm font-medium text-[#F5EBE1]">káva</span>
                     <span className="text-sm font-bold text-[#F5EBE1]">
-                      {status.freeCoffees === 0
+                      {status.count < 10
                         ? `${status.count}/10`
-                        : `${status.count} celkem (${status.currentInCycle === 0 ? 10 : status.currentInCycle}/10)`}
+                        : `${status.count} káv`}
                     </span>
                   </div>
 
@@ -547,11 +553,7 @@ export const ScannerPage: React.FC = () => {
                   <div className="grid grid-cols-5 gap-2.5 sm:gap-3 justify-items-center">
                     {Array.from({ length: 10 }).map((_, idx) => {
                       const isStamped =
-                        status.freeCoffees === 0
-                          ? idx < status.count
-                          : status.currentInCycle === 0
-                          ? true
-                          : idx < status.currentInCycle;
+                        status.count >= 10 ? true : idx < status.count;
                       const isLast = idx === 9;
                       return (
                         <div
@@ -579,11 +581,6 @@ export const ScannerPage: React.FC = () => {
                     <p className="font-serif-heading text-sm text-[#F5EBE1]">
                       {status.staffText}
                     </p>
-                    {status.freeCoffees > 0 && status.currentInCycle > 0 && (
-                      <p className="text-[11px] text-[#A39284] mt-0.5 font-sans">
-                        (Do další kávy zdarma zbývá {status.remainder} káv)
-                      </p>
-                    )}
                   </div>
 
                   {/* Notifikace výsledku akce */}

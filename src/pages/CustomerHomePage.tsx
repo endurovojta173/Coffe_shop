@@ -83,7 +83,7 @@ export const CustomerHomePage: React.FC = () => {
             </div>
             <div className="text-right bg-[#221912] border border-[#3E3025] px-4 py-2.5 rounded-2xl shrink-0">
               <span className="text-xl sm:text-2xl font-bold text-[#D89D60] block leading-none">
-                {status.freeCoffees === 0 ? `${status.count}/10` : `${status.count}`}
+                {status.count < 10 ? `${status.count}/10` : `${status.count} káv`}
               </span>
               <span className="text-[11px] text-[#A39284]">
                 {status.freeCoffees > 0
@@ -109,11 +109,7 @@ export const CustomerHomePage: React.FC = () => {
               const pos = idx + 1;
               const isTenth = pos === 10;
               const isCollected =
-                status.freeCoffees === 0
-                  ? pos <= status.count
-                  : status.currentInCycle === 0
-                  ? true
-                  : pos <= status.currentInCycle;
+                status.count >= 10 ? true : pos <= status.count;
 
               return (
                 <div
@@ -144,20 +140,14 @@ export const CustomerHomePage: React.FC = () => {
             <div className="flex items-center justify-between text-xs mb-2">
               <span className="text-[#A39284]">Postup k odměně</span>
               <span className="font-semibold text-[#F5EBE1]">
-                {status.freeCoffees > 0 && status.currentInCycle === 0
-                  ? 100
-                  : status.currentInCycle * 10} %
+                {status.count >= 10 ? 100 : status.count * 10} %
               </span>
             </div>
             <div className="w-full h-2.5 bg-[#1C140D] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#D89D60] rounded-full transition-all duration-500"
                 style={{
-                  width: `${
-                    status.freeCoffees > 0 && status.currentInCycle === 0
-                      ? 100
-                      : status.currentInCycle * 10
-                  }%`,
+                  width: `${status.count >= 10 ? 100 : status.count * 10}%`,
                 }}
               />
             </div>
