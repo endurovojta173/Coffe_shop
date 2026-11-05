@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Download,
-  Globe,
   Home,
   MoreHorizontal,
   QrCode,
@@ -21,7 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 export const CustomerLayout: React.FC = () => {
   const { currentUser, isCardModalOpen, setCardModalOpen } = useAppState();
   const { isInstalled } = usePwaInstall();
-  const { t, language, toggleLanguage } = useLanguage();
+  const { t } = useLanguage();
   const [isInstallModalOpen, setInstallModalOpen] = useState(false);
   const location = useLocation();
 
@@ -91,21 +90,6 @@ export const CustomerLayout: React.FC = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              title={
-                language === 'cs'
-                  ? 'Switch to English'
-                  : language === 'en'
-                  ? '한국어로 변경 (Switch to Korean)'
-                  : 'Přepnout do češtiny (Switch to Czech)'
-              }
-              className="px-2.5 py-1 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer"
-            >
-              {language === 'cs' ? 'EN' : language === 'en' ? 'KO' : 'CZ'}
-            </button>
-
             {!isInstalled && (
               <button
                 type="button"
@@ -199,24 +183,8 @@ export const CustomerLayout: React.FC = () => {
             </NavLink>
           </nav>
 
-          {/* CTA Moje kartička + Přepínač jazyka + Instalovat + Pozdrav uživatele */}
+          {/* CTA Moje kartička + Instalovat + Pozdrav uživatele */}
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleLanguage}
-              title={
-                language === 'cs'
-                  ? 'Switch to English'
-                  : language === 'en'
-                  ? '한국어로 변경 (Switch to Korean)'
-                  : 'Přepnout do češtiny (Switch to Czech)'
-              }
-              className="px-3 py-1.5 rounded-full bg-[#221912] border border-[#3E3025] hover:border-[#D89D60] text-xs font-semibold text-[#A39284] hover:text-[#D89D60] transition cursor-pointer flex items-center gap-1.5"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#D89D60]" />
-              <span>{language.toUpperCase()}</span>
-            </button>
-
             {!isInstalled && (
               <button
                 type="button"

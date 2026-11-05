@@ -19,7 +19,7 @@ export interface LoyaltyStatus {
 
 export function getLoyaltyStatus(
   count: number,
-  lang: 'cs' | 'en' | 'ko' = 'cs'
+  lang: 'cs' | 'en' = 'cs'
 ): LoyaltyStatus {
   const safeCount = Math.max(0, count);
   const freeCoffees = Math.floor(safeCount / 10);
@@ -64,7 +64,8 @@ export function getLoyaltyStatus(
       badgeText = `${safeCount} káv • ${freeCoffees}× ZDARMA`;
       freeCoffeeLabel = `Káva zdarma (${freeCoffees})`;
     }
-  } else if (lang === 'en') {
+  } else {
+    // en (English default)
     if (freeCoffees === 0) {
       customerText =
         remainder === 1
@@ -86,19 +87,6 @@ export function getLoyaltyStatus(
       staffText = `Customer is eligible for ${freeCoffees} free coffees`;
       badgeText = `${safeCount} coffees • ${freeCoffees}× FREE`;
       freeCoffeeLabel = `Free coffee (${freeCoffees})`;
-    }
-  } else {
-    // ko (Korean)
-    if (freeCoffees === 0) {
-      customerText = `무료 커피까지 ${remainder}잔 남았습니다`;
-      staffText = `무료 커피까지 ${remainder}잔 남음`;
-      badgeText = `${safeCount}/10`;
-      freeCoffeeLabel = '무료 커피';
-    } else {
-      customerText = `무료 커피 ${freeCoffees}잔 혜택이 있습니다! (총 ${safeCount}잔)`;
-      staffText = `무료 커피 ${freeCoffees}잔 수령 가능`;
-      badgeText = `${safeCount}잔 • 무료 ${freeCoffees}잔`;
-      freeCoffeeLabel = `무료 커피 (${freeCoffees})`;
     }
   }
 

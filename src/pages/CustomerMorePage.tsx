@@ -124,8 +124,6 @@ export const CustomerMorePage: React.FC = () => {
                   <p className="text-[11px] text-[#A39284] mt-0.5">
                     {systemLanguage === 'cs'
                       ? 'Detekovaný systém: Čeština'
-                      : systemLanguage === 'ko'
-                      ? 'Detekovaný systém: 한국어'
                       : 'Detected system: English'}
                   </p>
                 </div>
@@ -166,24 +164,6 @@ export const CustomerMorePage: React.FC = () => {
                   <span className="text-xs font-semibold">{t('more.languageEn')}</span>
                 </div>
                 {preference === 'en' && (
-                  <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPreference('ko')}
-                className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition cursor-pointer ${
-                  preference === 'ko'
-                    ? 'bg-[#D89D60]/15 border-[#D89D60] text-[#F5EBE1]'
-                    : 'bg-[#221912] border-[#3E3025] text-[#A39284] hover:text-[#F5EBE1]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-sm">🇰🇷</span>
-                  <span className="text-xs font-semibold">{t('more.languageKo')}</span>
-                </div>
-                {preference === 'ko' && (
                   <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0" />
                 )}
               </button>

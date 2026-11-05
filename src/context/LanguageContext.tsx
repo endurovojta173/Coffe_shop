@@ -8,10 +8,9 @@ import React, {
 } from 'react';
 import { cs, type Translations } from '../locales/cs';
 import { en } from '../locales/en';
-import { ko } from '../locales/ko';
 
-export type Language = 'cs' | 'en' | 'ko';
-export type LanguagePreference = 'auto' | 'cs' | 'en' | 'ko';
+export type Language = 'cs' | 'en';
+export type LanguagePreference = 'auto' | 'cs' | 'en';
 
 export function detectSystemLanguage(): Language {
   if (typeof window === 'undefined' || !window.navigator) {
@@ -31,20 +30,13 @@ export function detectSystemLanguage(): Language {
     if (code.startsWith('cs') || code.startsWith('sk')) {
       return 'cs';
     }
-    if (code.startsWith('ko')) {
-      return 'ko';
-    }
     if (code.startsWith('en')) {
       return 'en';
     }
   }
 
-  // Pokud primární jazyk systému je korejština
   if (candidateLanguages.length > 0) {
     const first = candidateLanguages[0].toLowerCase();
-    if (first.startsWith('ko')) {
-      return 'ko';
-    }
     if (!first.startsWith('cs') && !first.startsWith('sk')) {
       return 'en';
     }
@@ -65,7 +57,6 @@ interface LanguageContextValue {
 const dictionaries: Record<Language, Translations> = {
   cs,
   en,
-  ko,
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -77,7 +68,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (typeof window === 'undefined') return 'auto';
     try {
       const stored = localStorage.getItem(STORAGE_KEY) as LanguagePreference | null;
-      if (stored === 'auto' || stored === 'cs' || stored === 'en' || stored === 'ko') {
+      if (stored === 'auto' || stored === 'cs' || stored === 'en') {
         return stored;
       }
     } catch {
@@ -118,9 +109,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  // Rychlé přepínání (cs -> en -> ko -> cs)
+  // Rychlé přepínání (cs <-> en)
   const toggleLanguage = useCallback(() => {
-    setPreference(language === 'cs' ? 'en' : language === 'en' ? 'ko' : 'cs');
+    setPreference(language === 'cs' ? 'en' : 'cs');
   }, [language, setPreference]);
 
   // Synchronizace <html lang="...">

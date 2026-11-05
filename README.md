@@ -106,13 +106,11 @@ ORDER BY created_at DESC;
 The application features full internationalization with **automatic phone system language detection**:
 
 - 🇨🇿 **Czech (`cs`)** – Default for Czech and Slovak systems (`cs`, `sk`).
-- 🇬🇧 **English (`en`)** – International default for all foreign systems.
-- 🇰🇷 **South Korean (`ko` / 한국어)** – Native Korean translation designed for international tourists.
+- 🇬🇧 **English (`en`)** – International default for foreign systems.
 
 ### How language switching works:
 1. **Automatic Detection:** The app detects the device system language (`navigator.languages`) on initial load and listens to real-time system changes (`languagechange` event).
-2. **One-Tap Header Pill:** Toggle quickly between `CZ | EN | KO` via the language button in the header bar or on the login screen.
-3. **Settings Card:** In the *More* section (`/app/more`), users can select a permanent language preference or revert to automatic system detection.
+2. **Settings Card:** In the *More* section (`/app/more`), users can select their preferred language (`Čeština` / `English`) or revert to automatic system detection.
 
 ---
 

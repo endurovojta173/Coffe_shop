@@ -250,6 +250,23 @@ CREATE TRIGGER trg_protect_profile_columns
   FOR EACH ROW
   EXECUTE FUNCTION public.protect_profile_sensitive_columns();
 
+-- =============================================================================
+-- Pomocná funkce pro bezpečné nastavení role v Supabase SQL Editoru
+-- Příklad použití: SELECT public.set_user_role('vojtechbrenekprace@gmail.com', 'staff');
+-- =============================================================================
+CREATE OR REPLACE FUNCTION public.set_user_role(target_email TEXT, new_role user_role)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  PERFORM set_config('app.bypass_profile_guard', 'on', true);
+  UPDATE public.profiles
+  SET role = new_role
+  WHERE lower(trim(email)) = lower(trim(target_email));
+END;
+$$;
+
 -- Politiky pro loyalty_logs
 DROP POLICY IF EXISTS "Loyalty logs select own or staff/admin" ON public.loyalty_logs;
 CREATE POLICY "Loyalty logs select own or staff/admin" ON public.loyalty_logs FOR SELECT

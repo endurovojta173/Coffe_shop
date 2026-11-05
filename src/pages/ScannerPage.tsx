@@ -230,11 +230,11 @@ export const ScannerPage: React.FC = () => {
           </div>
 
           {/* Uprostřed: Logo kavárny */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-              <CoffeeBeanIcon className="w-4 h-4" />
+          <div className="flex items-center gap-2 shrink-0 px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025]">
+            <div className="w-6 h-6 rounded-full bg-[#D89D60]/20 flex items-center justify-center text-[#D89D60]">
+              <CoffeeBeanIcon className="w-3.5 h-3.5" />
             </div>
-            <span className="font-serif-heading text-sm sm:text-base font-bold text-[#F5EBE1] tracking-wide hidden xs:inline">
+            <span className="font-serif-heading text-sm sm:text-base font-bold text-[#F5EBE1] tracking-wide">
               U Sousedů
             </span>
           </div>
@@ -526,70 +526,66 @@ export const ScannerPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Vnitřní karta se stavem razítek */}
+            {/* Obsah modálu přesně dle návrhu */}
             {(() => {
               const status = getLoyaltyStatus(scannedCustomer.coffee_count, 'cs');
               return (
-                <div className="mt-5 p-4 sm:p-5 rounded-2xl bg-[#221912] border border-[#3E3025]/80 space-y-4 sm:space-y-5">
-                  {/* Lišta: káva X/10 nebo X káv celkem */}
-                  <div className="bg-[#2D221A]/80 rounded-xl px-4 py-2.5 flex items-center justify-between border border-[#3E3025]/40">
+                <div className="mt-4 space-y-4">
+                  {/* Tmavá vložená lišta: káva | X/10 */}
+                  <div className="bg-[#221912] rounded-2xl px-5 py-3.5 flex items-center justify-between border border-[#3E3025]/50">
                     <span className="text-sm font-medium text-[#F5EBE1]">káva</span>
-                    <span className="text-sm font-bold text-[#F5EBE1]">
-                      {status.count < 10
-                        ? `${status.count}/10`
-                        : `${status.count} káv`}
+                    <span className="text-sm sm:text-base font-bold text-[#F5EBE1]">
+                      {scannedCustomer.coffee_count < 10
+                        ? `${scannedCustomer.coffee_count}/10`
+                        : scannedCustomer.coffee_count === 10
+                        ? '10/10'
+                        : `${scannedCustomer.coffee_count} káv`}
                     </span>
                   </div>
 
-                  {/* Zvýrazněný badge pro nárok na kávu zdarma */}
-                  {status.freeCoffees > 0 && (
-                    <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full bg-[#D89D60]/20 border border-[#D89D60] text-xs font-bold text-[#D89D60]">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      <span>{status.staffText}</span>
-                    </div>
-                  )}
-
-                  {/* Grid 10 razítek v rozložení 5x2 */}
-                  <div className="grid grid-cols-5 gap-2.5 sm:gap-3 justify-items-center">
+                  {/* Grid 10 razítek v rozložení 5x2 přímo na pozadí karty */}
+                  <div className="grid grid-cols-5 gap-3 justify-items-center py-1">
                     {Array.from({ length: 10 }).map((_, idx) => {
                       const isStamped =
-                        status.count >= 10 ? true : idx < status.count;
+                        scannedCustomer.coffee_count >= 10
+                          ? true
+                          : idx < scannedCustomer.coffee_count;
                       const isLast = idx === 9;
                       return (
                         <div
                           key={idx}
-                          className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${
                             isStamped
-                              ? 'bg-[#D89D60] text-[#1C140D] shadow-md shadow-[#D89D60]/20'
-                              : 'bg-[#2D221A] border border-dashed border-[#3E3025] text-[#3E3025]'
+                              ? 'bg-[#D89D60] text-[#1C140D] shadow-sm'
+                              : 'bg-[#221912] border border-dashed border-[#554233] text-[#554233]'
                           }`}
                         >
                           {isStamped ? (
-                            <Coffee className="w-5 h-5 fill-current" />
+                            <Coffee className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                           ) : isLast ? (
-                            <Star className="w-4 h-4 text-[#3E3025]" />
+                            <Star className="w-4 h-4 sm:w-5 sm:h-5" />
                           ) : (
-                            <Coffee className="w-4 h-4 text-[#3E3025]/50" />
+                            <Coffee className="w-4 h-4 sm:w-5 sm:h-5 opacity-40" />
                           )}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* Informace: Do kávy zdarma zbývá X nebo Zákazník má nárok na X káv zdarma */}
-                  <div className="text-center pt-1">
-                    <p className="font-serif-heading text-sm text-[#F5EBE1]">
-                      {status.staffText}
+                  {/* Text: Do kávy zdarma zbývá X / Máte nárok na X káv zdarma */}
+                  <div className="text-center py-1">
+                    <p className="font-serif-heading text-base sm:text-lg text-[#F5EBE1]">
+                      {status.customerText}
                     </p>
                   </div>
 
-                  {/* Notifikace výsledku akce */}
+                  {/* Notifikace výsledku akce (pokud proběhla) */}
                   {actionResult && (
                     <div
-                      className={`p-3 rounded-xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
+                      className={`p-3 rounded-2xl text-xs flex items-center gap-2 border animate-in fade-in duration-200 ${
                         actionResult.reward_redeemed
                           ? 'bg-[#D89D60]/20 border-[#D89D60] text-[#D89D60] font-semibold'
-                          : 'bg-[#2D221A] border-[#D89D60]/50 text-[#F5EBE1]'
+                          : 'bg-[#221912] border-[#D89D60]/50 text-[#F5EBE1]'
                       }`}
                     >
                       {actionResult.reward_redeemed ? (
@@ -601,31 +597,35 @@ export const ScannerPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Tlačítka dole: Káva zdarma + Přidat kávu */}
-                  <div className="flex items-center gap-2.5 pt-1">
+                  {/* Tlačítka dole: Káva zdarma + Přidat kávu dle návrhu */}
+                  <div className="grid grid-cols-2 gap-3 pt-1">
                     <button
                       type="button"
                       disabled={status.freeCoffees === 0 || actionLoading}
                       onClick={() => void handleRedeemReward(scannedCustomer.card_number)}
-                      className={`py-3.5 px-4 rounded-full text-xs font-bold transition flex items-center justify-center shrink-0 ${
+                      className={`py-3.5 px-4 rounded-full text-xs sm:text-sm font-medium transition flex items-center justify-center text-center ${
                         status.freeCoffees > 0
-                          ? 'bg-[#2D221A] hover:bg-[#D89D60] hover:text-[#1C140D] border-2 border-[#D89D60] text-[#D89D60] cursor-pointer shadow-lg shadow-[#D89D60]/20 active:scale-95'
-                          : 'bg-[#2D221A]/50 border border-[#3E3025] text-[#A39284]/40 cursor-not-allowed'
+                          ? 'bg-[#2D221A] hover:bg-[#D89D60] hover:text-[#1C140D] border-2 border-[#D89D60] text-[#D89D60] cursor-pointer shadow-lg shadow-[#D89D60]/20 active:scale-95 font-bold'
+                          : 'bg-[#221912] border border-[#3E3025] text-[#A39284]/50 cursor-not-allowed'
                       }`}
                     >
-                      <span>{status.freeCoffeeLabel}</span>
+                      <span>
+                        {status.freeCoffees > 1
+                          ? `Káva zdarma (${status.freeCoffees})`
+                          : 'Káva zdarma'}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       disabled={actionLoading}
                       onClick={() => void handleAddCoffee(scannedCustomer.card_number)}
-                      className="flex-1 py-3.5 px-4 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xl shadow-[#D89D60]/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50"
+                      className="py-3.5 px-4 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] text-[#1C140D] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-xl shadow-[#D89D60]/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50 text-center"
                     >
                       {actionLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Plus className="w-4 h-4 stroke-[3]" />
+                        <Plus className="w-4 h-4 stroke-[2.5]" />
                       )}
                       <span>Přidat kávu</span>
                     </button>
