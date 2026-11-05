@@ -220,8 +220,9 @@ export const AdminMenuPage: React.FC = () => {
                           onChange={(e) =>
                             handleItemChange(item.id, 'name', e.target.value)
                           }
+                          placeholder="Název položky (např. Espresso)"
                           aria-label="Název položky"
-                          className="flex-1 min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-[#1C140D] border border-[#3E3025] text-xs sm:text-sm text-[#F5EBE1] focus:outline-none focus:border-[#D89D60]"
+                          className="flex-1 min-w-0 px-2.5 sm:px-3 py-2 rounded-xl bg-[#1C140D] border border-[#3E3025] text-xs sm:text-sm text-[#F5EBE1] placeholder-[#A39284]/40 focus:outline-none focus:border-[#D89D60]"
                         />
 
                         <div className="relative w-20 sm:w-24 shrink-0">

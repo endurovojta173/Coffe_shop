@@ -14,6 +14,9 @@ import { CustomerMorePage } from './pages/CustomerMorePage';
 import { ScannerPage } from './pages/ScannerPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminMenuPage } from './pages/AdminMenuPage';
+import { AdminEventsPage } from './pages/AdminEventsPage';
+import { AdminStaffPage } from './pages/AdminStaffPage';
+import { AdminMessagesPage } from './pages/AdminMessagesPage';
 import type { UserRole } from './lib/database.types';
 
 const ProtectedRoute: React.FC<{
@@ -138,6 +141,39 @@ export const App: React.FC = () => {
                   redirectTo="/login"
                 >
                   <AdminMenuPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/events"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['admin']}
+                  redirectTo="/login"
+                >
+                  <AdminEventsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/staff"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['admin']}
+                  redirectTo="/login"
+                >
+                  <AdminStaffPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/messages"
+              element={
+                <ProtectedRoute
+                  allowedRoles={['admin']}
+                  redirectTo="/login"
+                >
+                  <AdminMessagesPage />
                 </ProtectedRoute>
               }
             />
