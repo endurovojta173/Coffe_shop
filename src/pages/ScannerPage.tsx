@@ -16,7 +16,6 @@ import {
   X,
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
-import { CoffeeBeanIcon } from '../components/CoffeeBeanIcon';
 import { supabase } from '../lib/supabase';
 import { getLoyaltyStatus } from '../lib/loyalty';
 import type { ScanCardResult } from '../lib/database.types';
@@ -190,7 +189,12 @@ export const ScannerPage: React.FC = () => {
         { facingMode: 'environment' },
         {
           fps: 10,
-          qrbox: { width: 220, height: 220 },
+          aspectRatio: 1.0,
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const edge = Math.max(180, Math.floor(minEdge * 0.72));
+            return { width: edge, height: edge };
+          },
         },
         (decodedText) => {
           void handleLookupCustomer(decodedText);
@@ -226,16 +230,6 @@ export const ScannerPage: React.FC = () => {
             </div>
             <span className="text-xs sm:text-sm font-semibold text-[#F5EBE1] truncate">
               {currentUser?.full_name ?? 'Barista'}
-            </span>
-          </div>
-
-          {/* Uprostřed: Logo kavárny */}
-          <div className="flex items-center gap-2 shrink-0 px-3.5 py-1.5 rounded-full bg-[#221912] border border-[#3E3025]">
-            <div className="w-6 h-6 rounded-full bg-[#D89D60]/20 flex items-center justify-center text-[#D89D60]">
-              <CoffeeBeanIcon className="w-3.5 h-3.5" />
-            </div>
-            <span className="font-serif-heading text-sm sm:text-base font-bold text-[#F5EBE1] tracking-wide">
-              U Sousedů
             </span>
           </div>
 
@@ -299,7 +293,11 @@ export const ScannerPage: React.FC = () => {
               }}
               title={cameraActive ? 'Klepnutím zastavíte skenování' : 'Klepnutím spustíte skenování'}
               aria-label={cameraActive ? 'Zastavit skenování' : 'Spustit skenování'}
-              className="relative aspect-square w-full max-w-sm mx-auto rounded-3xl bg-[#221912] border-2 border-dashed border-[#D89D60]/60 hover:border-[#D89D60] overflow-hidden flex flex-col items-center justify-center cursor-pointer transition group"
+              className={`relative aspect-square w-full max-w-sm mx-auto rounded-3xl bg-[#221912] overflow-hidden flex flex-col items-center justify-center cursor-pointer transition group ${
+                cameraActive
+                  ? 'border-2 border-[#D89D60] shadow-2xl shadow-[#D89D60]/10'
+                  : 'border-2 border-dashed border-[#D89D60]/60 hover:border-[#D89D60]'
+              }`}
             >
               <div id="barista-qr-reader" className="w-full h-full" />
 
@@ -318,6 +316,34 @@ export const ScannerPage: React.FC = () => {
                   <p className="text-[11px] text-[#A39284] mt-1">
                     Nebo použijte tlačítko Skenovat níže
                   </p>
+                </div>
+              )}
+
+              {/* Aktivní skenování – perfektně čtvercový hledáček s animovaným laserem a rohy */}
+              {cameraActive && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  {/* Čtvercový rámeček se stínovým ztmavením okolí */}
+                  <div className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-2xl shadow-[0_0_0_9999px_rgba(28,20,13,0.55)] border border-[#D89D60]/40 flex items-center justify-center overflow-hidden">
+                    {/* 4 výrazné zlaté rohy čtverce */}
+                    <div className="absolute top-0 left-0 w-7 h-7 border-t-4 border-l-4 border-[#D89D60] rounded-tl-xl" />
+                    <div className="absolute top-0 right-0 w-7 h-7 border-t-4 border-r-4 border-[#D89D60] rounded-tr-xl" />
+                    <div className="absolute bottom-0 left-0 w-7 h-7 border-b-4 border-l-4 border-[#D89D60] rounded-bl-xl" />
+                    <div className="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-[#D89D60] rounded-br-xl" />
+
+                    {/* Animovaný skenovací laser */}
+                    <div className="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-[#D89D60] to-transparent shadow-[0_0_12px_#D89D60] animate-scan-laser" />
+
+                    {/* Jemný středový bod */}
+                    <div className="w-6 h-6 border border-[#D89D60]/30 rounded-md flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#D89D60]/70" />
+                    </div>
+                  </div>
+
+                  {/* Nápověda dole pod čtvercem */}
+                  <div className="absolute bottom-3 px-3.5 py-1 rounded-full bg-[#1C140D]/85 backdrop-blur-md border border-[#3E3025] text-[11px] text-[#D89D60] font-medium shadow-lg flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#D89D60] animate-ping" />
+                    <span>Namiřte QR kód do čtverce</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -535,21 +561,17 @@ export const ScannerPage: React.FC = () => {
                   <div className="bg-[#221912] rounded-2xl px-5 py-3.5 flex items-center justify-between border border-[#3E3025]/50">
                     <span className="text-sm font-medium text-[#F5EBE1]">káva</span>
                     <span className="text-sm sm:text-base font-bold text-[#F5EBE1]">
-                      {scannedCustomer.coffee_count < 10
+                      {scannedCustomer.coffee_count <= 10
                         ? `${scannedCustomer.coffee_count}/10`
-                        : scannedCustomer.coffee_count === 10
-                        ? '10/10'
-                        : `${scannedCustomer.coffee_count} káv`}
+                        : `${scannedCustomer.coffee_count} káv (${status.stampsCollected}/10)`}
                     </span>
                   </div>
 
                   {/* Grid 10 razítek v rozložení 5x2 přímo na pozadí karty */}
                   <div className="grid grid-cols-5 gap-3 justify-items-center py-1">
                     {Array.from({ length: 10 }).map((_, idx) => {
-                      const isStamped =
-                        scannedCustomer.coffee_count >= 10
-                          ? true
-                          : idx < scannedCustomer.coffee_count;
+                      const pos = idx + 1;
+                      const isStamped = pos <= status.stampsCollected;
                       const isLast = idx === 9;
                       return (
                         <div

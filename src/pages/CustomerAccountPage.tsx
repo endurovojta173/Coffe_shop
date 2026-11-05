@@ -132,7 +132,7 @@ export const CustomerAccountPage: React.FC = () => {
                 {currentUser.full_name}
               </h2>
               <p className="text-xs text-[#A39284]">
-                Člen věrnostního klubu U Sousedů • {currentUser.coffee_count}/10 káv
+                Člen věrnostního klubu U Sousedů • {currentUser.coffee_count < 10 ? `${currentUser.coffee_count}/10 káv` : `${currentUser.coffee_count} káv`}
               </p>
             </div>
           </div>

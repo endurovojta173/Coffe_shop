@@ -6,10 +6,22 @@
  * což odečte 10 káv.
  */
 
+/**
+ * Pomocné funkce pro výpočet a formátování věrnostního programu (kávy zdarma).
+ * Zákazník může sbírat neomezeně káv nad 10 (např. 10, 11, 20 káv).
+ * Počítadlo celkových káv se NIKDY při 10 kávách automaticky nevynuluje.
+ * Po překonání 10 káv se ukazatel razítek/bodíků na kartičce sbírá od nuly (11 káv = 1 razítko),
+ * přičemž celkový počet káv se dál načítá a zůstává nárok na kávu zdarma.
+ * Káva zdarma se uplatní pouze tehdy, když obsluha klikne na tlačítko "Káva zdarma",
+ * což odečte 10 káv.
+ */
+
 export interface LoyaltyStatus {
   count: number;
   freeCoffees: number;
+  stampsCollected: number; // 0 až 10 razítek v aktuálním cyklu kartičky
   remainder: number;
+  cardProgressPercent: number; // 0 až 100 % v aktuálním cyklu
   customerText: string;
   staffText: string;
   badgeText: string;
@@ -23,8 +35,23 @@ export function getLoyaltyStatus(
 ): LoyaltyStatus {
   const safeCount = Math.max(0, count);
   const freeCoffees = Math.floor(safeCount / 10);
-  const isCardComplete = safeCount >= 10;
-  const remainder = isCardComplete ? 0 : Math.max(0, 10 - safeCount);
+
+  // Ukazatel bodíků / razítek na kartičce (0 až 10):
+  // 0 káv -> 0 razítek
+  // 1 až 9 káv -> 1 až 9 razítek
+  // 10 káv -> 10 razítek (karta dokončena, odměna připravena)
+  // 11 káv -> 1 razítko (překonáno 10, nová karta se sbírá od začátku)
+  // 20 káv -> 10 razítek (druhá karta dokončena)
+  // 21 káv -> 1 razítko atd.
+  let stampsCollected = 0;
+  if (safeCount > 0) {
+    const mod = safeCount % 10;
+    stampsCollected = mod === 0 ? 10 : mod;
+  }
+
+  const isCardComplete = stampsCollected === 10;
+  const cardProgressPercent = stampsCollected * 10;
+  const remainder = 10 - stampsCollected;
 
   let customerText = '';
   let staffText = '';
@@ -93,7 +120,9 @@ export function getLoyaltyStatus(
   return {
     count: safeCount,
     freeCoffees,
+    stampsCollected,
     remainder,
+    cardProgressPercent,
     customerText,
     staffText,
     badgeText,

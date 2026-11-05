@@ -84,8 +84,7 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
                 {Array.from({ length: 10 }).map((_, index) => {
                   const position = index + 1;
                   const isTenth = position === 10;
-                  const isFilled =
-                    status.count >= 10 ? true : position <= status.count;
+                  const isFilled = position <= status.stampsCollected;
 
                   return (
                     <div

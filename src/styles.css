@@ -32,3 +32,72 @@
   scrollbar-width: none;
 }
 
+/* Animace laserového paprsku pro QR skener */
+@keyframes scannerLaser {
+  0% {
+    top: 8%;
+    opacity: 0.6;
+  }
+  50% {
+    top: 88%;
+    opacity: 1;
+  }
+  100% {
+    top: 8%;
+    opacity: 0.6;
+  }
+}
+
+.animate-scan-laser {
+  animation: scannerLaser 2.2s ease-in-out infinite;
+}
+
+/* Html5Qrcode úpravy pro striktně čtvercový formát */
+#barista-qr-reader {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border: none !important;
+  background-color: #1C140D !important;
+  border-radius: 1.5rem !important;
+}
+
+#barista-qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: cover !important;
+  border-radius: 1.5rem !important;
+  display: block !important;
+}
+
+#barista-qr-reader canvas {
+  display: none !important;
+}
+
+#barista-qr-reader__scan_region {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border-radius: 1.5rem !important;
+}
+
+#qr-shaded-region {
+  display: none !important;
+}
+
+#barista-qr-reader__dashboard,
+#barista-qr-reader__dashboard_section_csr,
+#barista-qr-reader__dashboard_section_swaplink {
+  display: none !important;
+}
+

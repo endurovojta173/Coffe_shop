@@ -409,7 +409,7 @@ export const AdminDashboardPage: React.FC = () => {
                     </p>
                     <p className="text-xs text-[#A39284] truncate">{member.email}</p>
                     <p className="text-[11px] text-[#D89D60] font-mono mt-0.5">
-                      Karta: {member.card_number} • {member.coffee_count}/10 káv
+                      Karta: {member.card_number} • {member.coffee_count < 10 ? `${member.coffee_count}/10 káv` : `${member.coffee_count} káv`}
                     </p>
                   </div>
                   <select

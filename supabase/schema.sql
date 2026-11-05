@@ -43,12 +43,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT NOT NULL DEFAULT 'Zákazník',
   role user_role NOT NULL DEFAULT 'customer',
   card_number TEXT UNIQUE NOT NULL DEFAULT public.generate_unique_card_number(),
-  coffee_count INT NOT NULL DEFAULT 0 CHECK (coffee_count >= 0 AND coffee_count <= 10),
+  coffee_count INT NOT NULL DEFAULT 0 CHECK (coffee_count >= 0),
   notify_events BOOLEAN NOT NULL DEFAULT true,
   notify_messages BOOLEAN NOT NULL DEFAULT true,
   gdpr_consent BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Uvolnění limitu pro coffee_count, aby zákazník mohl sbírat neomezeně více jak 10 káv
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_coffee_count_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_coffee_count_check CHECK (coffee_count >= 0);
 
 -- 4. Trigger pro automatické založení profilu při registraci v Supabase Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()

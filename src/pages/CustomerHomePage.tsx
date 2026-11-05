@@ -87,7 +87,7 @@ export const CustomerHomePage: React.FC = () => {
               </span>
               <span className="text-[11px] text-[#A39284]">
                 {status.freeCoffees > 0
-                  ? `${status.freeCoffees}× ZDARMA`
+                  ? `${status.freeCoffees}× ZDARMA (${status.stampsCollected}/10)`
                   : `${status.remainder} zbývá`}
               </span>
             </div>
@@ -108,8 +108,7 @@ export const CustomerHomePage: React.FC = () => {
             {Array.from({ length: 10 }).map((_, idx) => {
               const pos = idx + 1;
               const isTenth = pos === 10;
-              const isCollected =
-                status.count >= 10 ? true : pos <= status.count;
+              const isCollected = pos <= status.stampsCollected;
 
               return (
                 <div
@@ -140,14 +139,14 @@ export const CustomerHomePage: React.FC = () => {
             <div className="flex items-center justify-between text-xs mb-2">
               <span className="text-[#A39284]">Postup k odměně</span>
               <span className="font-semibold text-[#F5EBE1]">
-                {status.count >= 10 ? 100 : status.count * 10} %
+                {status.cardProgressPercent} %
               </span>
             </div>
             <div className="w-full h-2.5 bg-[#1C140D] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#D89D60] rounded-full transition-all duration-500"
                 style={{
-                  width: `${status.count >= 10 ? 100 : status.count * 10}%`,
+                  width: `${status.cardProgressPercent}%`,
                 }}
               />
             </div>
