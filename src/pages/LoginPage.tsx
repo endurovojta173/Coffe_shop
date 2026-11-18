@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] lg:grid lg:grid-cols-2">
+    <div className="h-dvh overflow-hidden bg-[#1C140D] text-[#F5EBE1] lg:grid lg:h-auto lg:min-h-screen lg:grid-cols-2">
       {/* Levá polovina na desktopu (lg:grid-cols-2): Fotografie kavárny s textovým claimem */}
       <div className="hidden lg:flex relative flex-col justify-between p-12 overflow-hidden border-r border-[#3E3025]">
         <img
@@ -167,45 +167,64 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* Pravá polovina (a celý mobilní pohled) */}
-      <div className="flex flex-col justify-center relative min-h-screen">
-        {/* Mobilní horní dekorativní podkresový obrázek s přechodem do ztracena */}
-        <div className="lg:hidden relative h-56 w-full overflow-hidden">
+      <div className="relative flex h-full min-h-0 flex-col lg:h-auto lg:min-h-screen lg:justify-center">
+        {/* Dekorace v pozadí nezabírá na mobilu žádné místo formuláře. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 overflow-hidden lg:hidden" aria-hidden="true">
           <img
             src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1000&q=80"
-            alt="Latte art U Sousedů"
-            className="w-full h-full object-cover opacity-60"
+            alt=""
+            width={1000}
+            height={667}
+            className="h-full w-full object-cover opacity-40"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1C140D]/20 via-[#1C140D]/60 to-[#1C140D]" />
-          <div className="absolute bottom-4 left-6 right-6 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-[#2D221A] border border-[#3E3025] flex items-center justify-center text-[#D89D60] shadow-lg">
-              <CoffeeBeanIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#F5EBE1]">U Sousedů</h1>
-              <p className="text-xs text-[#A39284]">Vstup do systému</p>
-            </div>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1C140D]/45 via-[#1C140D]/85 to-[#1C140D]" />
         </div>
 
-        {/* Centrovaný formulář (max-w-md mx-auto) */}
-        <div className="w-full max-w-md mx-auto px-6 py-8 lg:py-12">
+        <header className="relative z-10 flex h-[calc(4rem+env(safe-area-inset-top))] shrink-0 items-center justify-between px-5 pt-[env(safe-area-inset-top)] sm:px-6 lg:hidden">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#3E3025] bg-[#2D221A]/90 text-[#D89D60] shadow-lg">
+              <CoffeeBeanIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="font-serif-heading text-xl font-bold leading-tight text-[#F5EBE1]">U Sousedů</h1>
+              <p className="text-[10px] text-[#A39284]">Vstup do systému</p>
+            </div>
+          </div>
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={() => setIsInstallOpen(true)}
+              aria-label={t('auth.installPromo')}
+              title={t('auth.installPromo')}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#3E3025] bg-[#2D221A]/80 text-[#D89D60] transition-colors hover:bg-[#2D221A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60]"
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </header>
+
+        {/* Centrovaný formulář využije na mobilu celou zbývající výšku viewportu. */}
+        <div className="relative z-10 mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col justify-center px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:block lg:flex-none lg:px-6 lg:py-12">
           {!isConfigured && (
-            <div className="mb-6 p-4 rounded-2xl bg-[#D96B6B]/15 border border-[#D96B6B] text-xs text-[#F5EBE1] space-y-1.5">
-              <div className="flex items-center gap-2 font-semibold text-[#D96B6B]">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+            <div role="alert" className="absolute inset-x-0 bottom-0 z-20 space-y-1.5 rounded-2xl border border-[#D96B6B] bg-[#321F19] p-3 text-xs text-[#F5EBE1] shadow-xl lg:static lg:mb-6 lg:bg-[#D96B6B]/15 lg:p-4 lg:shadow-none">
+              <div className="flex items-center gap-2 font-semibold text-[#E78A8A]">
+                <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>Chybí konfigurace Supabase (.env)</span>
               </div>
-              <p className="text-[#A39284]">
-                Nastavte <code className="text-[#F5EBE1]">VITE_SUPABASE_URL</code> a{' '}
-                <code className="text-[#F5EBE1]">VITE_SUPABASE_ANON_KEY</code> v souboru{' '}
-                <code className="text-[#F5EBE1]">.env</code>.
+              <p className="text-[#C2B1A3]">
+                <span className="lg:hidden">Pro přihlášení nastavte připojení k Supabase.</span>
+                <span className="hidden lg:inline">
+                  Nastavte <code className="text-[#F5EBE1]">VITE_SUPABASE_URL</code> a{' '}
+                  <code className="text-[#F5EBE1]">VITE_SUPABASE_ANON_KEY</code> v souboru{' '}
+                  <code className="text-[#F5EBE1]">.env</code>.
+                </span>
               </p>
             </div>
           )}
 
-          <div className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-2xl">
+          <div className="relative lg:rounded-3xl lg:border lg:border-[#3E3025] lg:bg-[#2D221A] lg:p-8 lg:shadow-2xl">
             {/* Přepínač režimu: Přihlášení / Registrace + Jazyk */}
-            <div className="flex items-center justify-between mb-6 gap-3">
+            <div className="mb-4 flex items-center justify-between gap-3 lg:mb-6">
               <div className="grid grid-cols-2 p-1 rounded-full bg-[#221912] border border-[#3E3025] flex-1 max-w-[260px]">
                 <button
                   type="button"
@@ -214,7 +233,7 @@ export const LoginPage: React.FC = () => {
                     setError(null);
                     setInfoMessage(null);
                   }}
-                  className={`py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                  className={`rounded-full py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#F5EBE1] ${
                     mode === 'login'
                       ? 'bg-[#D89D60] text-[#1C140D]'
                       : 'text-[#A39284] hover:text-[#F5EBE1]'
@@ -229,7 +248,7 @@ export const LoginPage: React.FC = () => {
                     setError(null);
                     setInfoMessage(null);
                   }}
-                  className={`py-2 rounded-full text-xs font-semibold transition cursor-pointer ${
+                  className={`rounded-full py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#F5EBE1] ${
                     mode === 'register'
                       ? 'bg-[#D89D60] text-[#1C140D]'
                       : 'text-[#A39284] hover:text-[#F5EBE1]'
@@ -240,13 +259,13 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">
+            <div className="mb-4 lg:mb-6">
+              <h2 className="font-serif-heading text-[1.75rem] font-bold leading-8 text-[#F5EBE1] text-pretty lg:text-2xl">
                 {mode === 'login' && t('auth.loginTitle')}
                 {mode === 'register' && t('auth.registerTitle')}
                 {mode === 'reset' && t('auth.resetTitle')}
               </h2>
-              <p className="text-sm text-[#A39284] mt-1">
+              <p className="mt-1 text-xs leading-[1.125rem] text-[#A39284] lg:text-sm lg:leading-5">
                 {mode === 'login' && t('auth.loginSubtitle')}
                 {mode === 'register' && t('auth.registerSubtitle')}
                 {mode === 'reset' && t('auth.resetSubtitle')}
@@ -254,94 +273,98 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {error && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-[#D96B6B]/15 border border-[#D96B6B] text-xs text-[#F5EBE1]">
+              <div role="alert" className="absolute inset-x-0 bottom-0 z-20 rounded-2xl border border-[#D96B6B] bg-[#321F19] p-3 text-xs text-[#F5EBE1] shadow-xl lg:static lg:mb-4 lg:bg-[#D96B6B]/15 lg:p-3.5 lg:shadow-none">
                 {error}
               </div>
             )}
 
             {infoMessage && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-[#D89D60]/15 border border-[#D89D60] text-xs text-[#F5EBE1] flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#D89D60] shrink-0 mt-0.5" />
+              <div role="status" className="absolute inset-x-0 bottom-0 z-20 flex items-start gap-2 rounded-2xl border border-[#D89D60] bg-[#30281A] p-3 text-xs text-[#F5EBE1] shadow-xl lg:static lg:mb-4 lg:bg-[#D89D60]/15 lg:p-3.5 lg:shadow-none">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#D89D60]" aria-hidden="true" />
                 <span>{infoMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
               {mode === 'register' && (
-                <div>
-                  <label className="block text-xs font-medium text-[#A39284] mb-1.5">
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A39284]" aria-hidden="true" />
+                  <label htmlFor="full-name" className="absolute left-11 top-1.5 z-10 text-[10px] font-medium leading-4 text-[#A39284]">
                     {t('auth.fullNameLabel')}
                   </label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-[#A39284] absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder={t('auth.fullNamePlaceholder')}
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-sm text-[#F5EBE1] placeholder-[#A39284]/60 focus:outline-none focus:border-[#D89D60]"
-                    />
-                  </div>
+                  <input
+                    id="full-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder={t('auth.fullNamePlaceholder')}
+                    required
+                    className="h-14 w-full rounded-2xl border border-[#3E3025] bg-[#221912] pl-11 pr-4 pt-4 text-base text-[#F5EBE1] placeholder-[#A39284]/60 focus:border-[#D89D60] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60]/30 lg:text-sm"
+                  />
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-medium text-[#A39284] mb-1.5">
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A39284]" aria-hidden="true" />
+                <label htmlFor="email" className="absolute left-11 top-1.5 z-10 text-[10px] font-medium leading-4 text-[#A39284]">
                   {t('auth.emailLabel')}
                 </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-[#A39284] absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t('auth.emailPlaceholder')}
-                    required
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-sm text-[#F5EBE1] placeholder-[#A39284]/60 focus:outline-none focus:border-[#D89D60]"
-                  />
-                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t('auth.emailPlaceholder')}
+                  required
+                  className="h-14 w-full rounded-2xl border border-[#3E3025] bg-[#221912] pl-11 pr-4 pt-4 text-base text-[#F5EBE1] placeholder-[#A39284]/60 focus:border-[#D89D60] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60]/30 lg:text-sm"
+                />
               </div>
 
               {mode !== 'reset' && (
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-medium text-[#A39284]">
-                      {t('auth.passwordLabel')}
-                    </label>
-                    {mode === 'login' && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMode('reset');
-                          setError(null);
-                          setInfoMessage(null);
-                        }}
-                        className="text-xs text-[#D89D60] hover:underline cursor-pointer"
-                      >
-                        {t('auth.forgotPasswordQuestion')}
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-[#A39284] absolute left-4 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      minLength={6}
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[#221912] border border-[#3E3025] text-sm text-[#F5EBE1] placeholder-[#A39284]/60 focus:outline-none focus:border-[#D89D60]"
-                    />
-                  </div>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A39284]" aria-hidden="true" />
+                  <label htmlFor="password" className="absolute left-11 top-1.5 z-10 text-[10px] font-medium leading-4 text-[#A39284]">
+                    {t('auth.passwordLabel')}
+                  </label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMode('reset');
+                        setError(null);
+                        setInfoMessage(null);
+                      }}
+                      className="absolute right-3 top-1 z-10 rounded px-1 py-0.5 text-[10px] leading-4 text-[#D89D60] transition-colors hover:bg-[#3E3025]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60]"
+                    >
+                      {t('auth.forgotPasswordQuestion')}
+                    </button>
+                  )}
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    required
+                    className="h-14 w-full rounded-2xl border border-[#3E3025] bg-[#221912] pl-11 pr-4 pt-4 text-base text-[#F5EBE1] placeholder-[#A39284]/60 focus:border-[#D89D60] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60]/30 lg:text-sm"
+                  />
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={submitting || !isConfigured}
-                className="w-full py-3.5 px-6 rounded-full bg-[#D89D60] hover:bg-[#e3aa6e] disabled:opacity-50 text-[#1C140D] font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#D89D60]/20 transition cursor-pointer mt-2"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#D89D60] px-6 text-sm font-semibold text-[#1C140D] shadow-lg shadow-[#D89D60]/20 transition-colors hover:bg-[#e3aa6e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5EBE1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1C140D] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -362,15 +385,15 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMode('login')}
-                className="w-full mt-4 py-2.5 rounded-full border border-[#3E3025] text-xs text-[#A39284] hover:text-[#F5EBE1] transition cursor-pointer"
+                className="mt-3 w-full rounded-full border border-[#3E3025] py-2.5 text-xs text-[#A39284] transition-colors hover:text-[#F5EBE1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60] lg:mt-4"
               >
                 {t('auth.backToLogin')}
               </button>
             ) : (
               <>
-                <div className="relative my-6 flex items-center justify-center">
+                <div className="relative my-4 flex items-center justify-center lg:my-6">
                   <div className="border-t border-[#3E3025] w-full" />
-                  <span className="bg-[#2D221A] px-3 text-xs text-[#A39284] whitespace-nowrap">
+                  <span className="bg-[#1C140D] px-3 text-xs text-[#A39284] whitespace-nowrap lg:bg-[#2D221A]">
                     {t('auth.or')}
                   </span>
                   <div className="border-t border-[#3E3025] w-full" />
@@ -381,9 +404,9 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   disabled={!isConfigured}
                   onClick={() => void handleGoogleOAuth()}
-                  className="w-full py-3 px-5 rounded-full bg-[#221912] hover:bg-[#1C140D] disabled:opacity-50 border border-[#3E3025] text-sm font-medium text-[#F5EBE1] flex items-center justify-center gap-3 transition cursor-pointer"
+                  className="flex h-11 w-full items-center justify-center gap-3 rounded-full border border-[#3E3025] bg-[#221912] px-5 text-sm font-medium text-[#F5EBE1] transition-colors hover:bg-[#1C140D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D89D60] disabled:cursor-not-allowed disabled:opacity-50 lg:h-12"
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path
                       fill="#EA4335"
                       d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"
@@ -407,7 +430,7 @@ export const LoginPage: React.FC = () => {
             )}
           </div>
           {!isInstalled && (
-            <div className="mt-6 text-center text-xs text-[#A39284]">
+            <div className="mt-6 hidden text-center text-xs text-[#A39284] lg:block">
               <button
                 type="button"
                 onClick={() => setIsInstallOpen(true)}
