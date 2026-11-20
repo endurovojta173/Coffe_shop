@@ -42,8 +42,16 @@ export const CustomerLayout: React.FC = () => {
       ? 'Lukáši'
       : firstName;
 
+  const isCardPage = location.pathname === '/app/card';
+
   return (
-    <div className="min-h-screen bg-[#1C140D] text-[#F5EBE1] flex flex-col pb-24 md:pb-12">
+    <div
+      className={`bg-[#1C140D] text-[#F5EBE1] flex flex-col ${
+        isCardPage
+          ? 'h-dvh overflow-y-auto pb-[88px] md:pb-0'
+          : 'min-h-screen pb-24 md:pb-12'
+      }`}
+    >
       {/* Pokud má přihlášený uživatel roli staff nebo admin, zobrazíme mu rychlý odkaz do pokladního skeneru / administrace */}
       {currentUser && (currentUser.role === 'staff' || currentUser.role === 'admin') && (
         <div className="bg-[#221912] border-b border-[#3E3025] text-xs text-[#A39284]">
@@ -221,7 +229,13 @@ export const CustomerLayout: React.FC = () => {
       </header>
 
       {/* Hlavní plnohodnotný webový kontejner (max-w-6xl mx-auto px-4 md:px-8) */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
+      <main
+        className={`flex-1 w-full max-w-6xl mx-auto px-4 md:px-8 ${
+          isCardPage
+            ? 'py-2 md:py-6 flex flex-col'
+            : 'py-6 md:py-10'
+        }`}
+      >
         <Outlet />
       </main>
 

@@ -275,6 +275,13 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
           void refreshData();
         }
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'loyalty_logs' },
+        () => {
+          void refreshData();
+        }
+      )
       .subscribe();
 
     return () => {

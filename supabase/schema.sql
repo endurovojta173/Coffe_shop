@@ -490,12 +490,20 @@ BEGIN
 END $$;
 
 -- =============================================================================
--- Realtime publikace pro živé překreslování bodů a menu v aplikaci
+-- Realtime publikace pro živé překreslování bodů, historie transakcí a menu
+-- Každá tabulka se přidává samostatně, aby již přidané tabulky neblokovaly nové.
 -- =============================================================================
-DO $$ BEGIN
-  ALTER PUBLICATION supabase_realtime ADD TABLE profiles, menu_items, events, app_messages;
-EXCEPTION
-  WHEN duplicate_object THEN null;
-  WHEN undefined_object THEN null;
+DO $$
+DECLARE
+  v_table TEXT;
+BEGIN
+  FOREACH v_table IN ARRAY ARRAY['profiles', 'menu_items', 'events', 'app_messages', 'loyalty_logs'] LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE public.%I', v_table);
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+      WHEN undefined_object THEN null;
+    END;
+  END LOOP;
 END $$;
 

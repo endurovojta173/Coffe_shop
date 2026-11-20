@@ -197,6 +197,9 @@ export const ScannerPage: React.FC = () => {
           },
         },
         (decodedText) => {
+          if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+            navigator.vibrate(100);
+          }
           void handleLookupCustomer(decodedText);
           void html5QrCode.stop().catch(() => undefined);
           setCameraActive(false);
