@@ -3,9 +3,9 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Download,
   Home,
-  MoreHorizontal,
   QrCode,
   ScanLine,
+  Settings,
   ShieldCheck,
   User,
   UtensilsCrossed,
@@ -309,44 +309,49 @@ export const CustomerLayout: React.FC = () => {
               }`
             }
           >
-            <MoreHorizontal className="w-5 h-5" />
+            <Settings className="w-5 h-5" />
             <span>{t('nav.more')}</span>
           </NavLink>
         </div>
       </nav>
 
-      {/* Modální okno pro Moji kartičku na desktopu */}
+      {/* Full-screen překryv pro Moji kartičku (otevřený z CTA tlačítka) */}
       {isCardModalOpen && currentUser && (
         <div
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-[#1C140D]/95 backdrop-blur-md flex flex-col overflow-y-auto animate-in fade-in duration-150"
           onClick={() => setCardModalOpen(false)}
         >
-          <div
-            className="w-full max-w-md relative animate-in fade-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="w-full max-w-4xl mx-auto px-4 md:px-8 pt-4 pb-2 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[#2D221A] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
+                <CoffeeBeanIcon className="w-5 h-5" />
+              </div>
+              <span className="font-serif-heading text-lg font-bold text-[#F5EBE1]">
+                U Sousedů
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => setCardModalOpen(false)}
               aria-label="Zavřít kartičku"
-              className="absolute -top-3 -right-3 z-10 w-10 h-10 rounded-full bg-[#2D221A] border border-[#3E3025] text-[#F5EBE1] hover:text-[#D89D60] flex items-center justify-center shadow-lg cursor-pointer"
+              className="w-10 h-10 rounded-full bg-[#2D221A] border border-[#3E3025] text-[#F5EBE1] hover:border-[#D89D60] hover:text-[#D89D60] flex items-center justify-center shadow-lg transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
+          </div>
+
+          <div
+            className="flex-1 w-full max-w-md md:max-w-4xl mx-auto px-4 md:px-8 pb-6 flex flex-col justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
             <LoyaltyCardContent
               fullName={currentUser.full_name}
               cardNumber={currentUser.card_number}
               coffeeCount={currentUser.coffee_count}
+              variant="page"
             />
-            <div className="mt-3 text-center">
-              <Link
-                to="/app/card"
-                onClick={() => setCardModalOpen(false)}
-                className="text-xs text-[#A39284] hover:text-[#D89D60] underline"
-              >
-                Otevřít na samostatné stránce (/app/card)
-              </Link>
-            </div>
           </div>
         </div>
       )}

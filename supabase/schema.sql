@@ -116,8 +116,14 @@ CREATE TABLE IF NOT EXISTS public.events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   event_date TIMESTAMPTZ NOT NULL,
-  image_url TEXT NOT NULL
+  image_url TEXT NOT NULL,
+  location TEXT,
+  description TEXT
 );
+
+-- Doplnění sloupců pro polohu a popis akce u již existujících databází
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS description TEXT;
 
 -- 8. Tabulka zpráv v aplikaci
 CREATE TABLE IF NOT EXISTS public.app_messages (
@@ -475,11 +481,11 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM public.events) THEN
-    INSERT INTO public.events (title, event_date, image_url) VALUES
-      ('Večerní Cupping: Výběrová káva z Kolumbie a Etiopie', '2026-11-12T18:00:00+01:00', 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=900&q=80'),
-      ('Akustický jazzový podvečer u krbu', '2026-11-19T19:30:00+01:00', 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=80'),
-      ('Kurz domácího Latte Artu s baristkou Terezou', '2026-11-26T16:30:00+01:00', 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=900&q=80'),
-      ('Nedělní sousedský brunch & bezedná Mimosa', '2026-11-29T10:00:00+01:00', 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80');
+    INSERT INTO public.events (title, event_date, image_url, location, description) VALUES
+      ('Večerní Cupping: Výběrová káva z Kolumbie a Etiopie', '2026-11-12T18:00:00+01:00', 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=900&q=80', 'U Sousedů – Hlavní kavárna (Křižíkova 34, Karlín)', 'Řízená degustace 6 výběrových lotů z podzimních sklizní v Kolumbii a Etiopii pod vedením našeho hlavního pražiče.'),
+      ('Akustický jazzový podvečer u krbu', '2026-11-19T19:30:00+01:00', 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=80', 'U Sousedů – Vinohrady (Korunní 48, Praha 2)', 'Živá akustická hudba v komorní atmosféře, speciální večerní menu s Espresso Martini a výběrem naturálních vín.'),
+      ('Kurz domácího Latte Artu s baristkou Terezou', '2026-11-26T16:30:00+01:00', 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=900&q=80', 'U Sousedů – Hlavní kavárna (Křižíkova 34, Karlín)', 'Praktický workshop šlehání mikropěny a nalévání srdíček i tulipánů. Vhodné i pro úplné začátečníky.'),
+      ('Nedělní sousedský brunch & bezedná Mimosa', '2026-11-29T10:00:00+01:00', 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=900&q=80', 'U Sousedů – Letná (Milady Horákové 64, Praha 7)', 'Kváskové chleby s avokádem, vejce Benedikt, domácí borůvkové lívance a čerstvě vymačkaná Mimosa.');
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM public.app_messages) THEN

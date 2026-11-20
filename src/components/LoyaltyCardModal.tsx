@@ -27,7 +27,7 @@ export const LoyaltyCardContent: React.FC<LoyaltyCardContentProps> = ({
       <div
         className={`bg-[#F5EBE1] rounded-2xl mx-auto shadow-inner border-[3px] border-[#3E3025] ${
           isPage
-            ? 'p-2.5 sm:p-3.5 md:p-5 w-[clamp(124px,22dvh,188px)] h-[clamp(124px,22dvh,188px)] md:w-[228px] md:h-[228px]'
+            ? 'p-3 sm:p-4 md:p-5 w-[clamp(152px,27dvh,224px)] h-[clamp(152px,27dvh,224px)] md:w-[236px] md:h-[236px]'
             : 'p-3 sm:p-4 w-[clamp(132px,23dvh,184px)] h-[clamp(132px,23dvh,184px)]'
         }`}
       >

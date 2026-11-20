@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import {
   Bell,
   CheckCircle2,
-  Coffee,
   Download,
   Globe,
-  Heart,
   MessageSquare,
   ShieldCheck,
   Smartphone,
@@ -40,60 +38,16 @@ export const CustomerMorePage: React.FC = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-[#F5EBE1] mt-1 font-serif-heading">
           {t('more.title')}
         </h1>
-        <p className="text-xs text-[#A39284] mt-1">{t('more.subtitle')}</p>
+        <p className="text-xs sm:text-sm text-[#A39284] mt-1">
+          {t('more.subtitle')}
+        </p>
       </div>
 
-      {/* Mobil: sekce pod sebou -> Desktop: md:grid-cols-2 gap-8 (dle AGENTS.md) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-        {/* Levý sloupec na desktopu: Karta "O nás" s fotografií kavárny */}
-        <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl overflow-hidden shadow-xl">
-          <div className="relative h-64 overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1000&q=80"
-              alt="Kavárna U Sousedů interiér"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2D221A] via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-6">
-              <span className="px-3 py-1 rounded-full bg-[#1C140D]/80 border border-[#3E3025] text-xs font-medium text-[#D89D60]">
-                {t('common.openToday')}
-              </span>
-            </div>
-          </div>
-
-          <div className="p-6 sm:p-8 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
-                <Coffee className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-[#F5EBE1] font-serif-heading">
-                  {t('more.aboutTitle')}
-                </h2>
-                <p className="text-xs text-[#A39284]">
-                  Kavárna • Pekárna • Komunitní prostor
-                </p>
-              </div>
-            </div>
-
-            <p className="text-sm text-[#A39284] leading-relaxed">
-              {t('more.aboutParagraph1')}
-            </p>
-
-            <p className="text-sm text-[#A39284] leading-relaxed">
-              {t('more.aboutParagraph2')}
-            </p>
-
-            <div className="pt-4 border-t border-[#3E3025] flex items-center gap-3 text-xs text-[#D89D60]">
-              <Heart className="w-4 h-4 fill-current shrink-0" />
-              <span>{t('more.communityThanks')}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Pravý sloupec na desktopu: "Jazyk aplikace", "Instalace aplikace", "Zprávy a upozornění" a "Správa souhlasů" */}
-        <div className="space-y-8">
-          {/* Karta Jazyk aplikace / Language Settings */}
+      {/* Nastavení: Jazyk, Mobilní aplikace, Zprávy a upozornění, Správa souhlasů */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        {/* Levý sloupec: Jazyk + Mobilní aplikace */}
+        <div className="space-y-6">
+          {/* 1. Jazyk aplikace */}
           <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
@@ -170,7 +124,7 @@ export const CustomerMorePage: React.FC = () => {
             </div>
           </section>
 
-          {/* Karta Instalace mobilní aplikace (Android & iPhone) */}
+          {/* 2. Mobilní aplikace */}
           <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
@@ -206,15 +160,18 @@ export const CustomerMorePage: React.FC = () => {
               </button>
             )}
           </section>
+        </div>
 
-          {/* Karta Zprávy a upozornění */}
+        {/* Pravý sloupec: Zprávy a upozornění + Správa souhlasů (GDPR) */}
+        <div className="space-y-6">
+          {/* 3. Zprávy a upozornění */}
           <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">
                 <Bell className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#F5EBE1]">
+                <h2 className="text-xl font-bold text-[#F5EBE1]">
                   {t('more.messagesTitle')}
                 </h2>
                 <p className="text-xs text-[#A39284]">
@@ -223,7 +180,6 @@ export const CustomerMorePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Přepínače (toggles) pro notifikace */}
             <div className="space-y-3">
               <div className="flex items-center justify-between p-4 rounded-2xl bg-[#221912] border border-[#3E3025]">
                 <div className="pr-4">
@@ -278,7 +234,6 @@ export const CustomerMorePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Poslední zprávy */}
             {messages.length > 0 && (
               <div className="pt-4 border-t border-[#3E3025] space-y-3">
                 <p className="text-xs uppercase tracking-wider text-[#A39284] font-semibold flex items-center gap-2">
@@ -291,9 +246,9 @@ export const CustomerMorePage: React.FC = () => {
                       key={msg.id}
                       className="p-3.5 rounded-2xl bg-[#221912] border border-[#3E3025] text-xs space-y-1"
                     >
-                      <div className="flex items-center justify-between text-[#F5EBE1] font-semibold">
+                      <div className="flex items-center justify-between text-[#F5EBE1] font-semibold gap-2">
                         <span>{msg.title}</span>
-                        <span className="text-[10px] text-[#A39284]">
+                        <span className="text-[10px] text-[#A39284] shrink-0">
                           {new Date(msg.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -305,7 +260,7 @@ export const CustomerMorePage: React.FC = () => {
             )}
           </section>
 
-          {/* Karta Správa souhlasů (GDPR) */}
+          {/* 4. Správa souhlasů (GDPR) */}
           <section className="bg-[#2D221A] border border-[#3E3025] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#221912] border border-[#3E3025] flex items-center justify-center text-[#D89D60]">

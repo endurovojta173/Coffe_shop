@@ -347,10 +347,11 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
     error?: string;
   }> => {
     const client = requireSupabase();
+    const baseUrl = `${window.location.origin}${import.meta.env.BASE_URL}`;
     const { error } = await client.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/app/home`,
+        redirectTo: `${baseUrl}app/home`,
       },
     });
     if (error) {
@@ -362,8 +363,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
   const sendPasswordReset = useCallback(
     async (email: string): Promise<{ ok: boolean; error?: string }> => {
       const client = requireSupabase();
+      const baseUrl = `${window.location.origin}${import.meta.env.BASE_URL}`;
       const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/app/account`,
+        redirectTo: `${baseUrl}app/account`,
       });
       if (error) {
         return { ok: false, error: error.message };
@@ -629,7 +631,20 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({
       const client = requireSupabase();
       const { error } = await client.from('events').insert(event as never);
       if (error) {
-        return { ok: false, error: error.message };
+        // Fallback pro starší DB schéma bez sloupců location/description
+        const errMsg = error.message.toLowerCase();
+        if (errMsg.includes('location') || errMsg.includes('description') || errMsg.includes('schema cache')) {
+          const { error: retryErr } = await client.from('events').insert({
+            title: event.title,
+            event_date: event.event_date,
+            image_url: event.image_url,
+          } as never);
+          if (retryErr) {
+            return { ok: false, error: retryErr.message };
+          }
+        } else {
+          return { ok: false, error: error.message };
+        }
       }
       await refreshData();
       return { ok: true };

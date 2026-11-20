@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="h-dvh overflow-hidden bg-[#1C140D] text-[#F5EBE1] lg:grid lg:h-auto lg:min-h-screen lg:grid-cols-2">
+    <div className="h-dvh overflow-y-auto bg-[#1C140D] text-[#F5EBE1] lg:grid lg:h-auto lg:min-h-screen lg:grid-cols-2">
       {/* Levá polovina na desktopu (lg:grid-cols-2): Fotografie kavárny s textovým claimem */}
       <div className="hidden lg:flex relative flex-col justify-between p-12 overflow-hidden border-r border-[#3E3025]">
         <img

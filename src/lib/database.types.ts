@@ -32,6 +32,8 @@ export interface CafeEvent {
   title: string;
   event_date: string;
   image_url: string;
+  location?: string | null;
+  description?: string | null;
 }
 
 export interface AppMessage {

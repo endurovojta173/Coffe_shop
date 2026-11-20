@@ -11,6 +11,7 @@ import { CustomerMenuPage } from './pages/CustomerMenuPage';
 import { CustomerCardPage } from './pages/CustomerCardPage';
 import { CustomerAccountPage } from './pages/CustomerAccountPage';
 import { CustomerMorePage } from './pages/CustomerMorePage';
+import { CustomerLocationsPage } from './pages/CustomerLocationsPage';
 import { ScannerPage } from './pages/ScannerPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminMenuPage } from './pages/AdminMenuPage';
@@ -105,7 +106,9 @@ export const App: React.FC = () => {
               <Route path="menu" element={<CustomerMenuPage />} />
               <Route path="card" element={<CustomerCardPage />} />
               <Route path="account" element={<CustomerAccountPage />} />
+              <Route path="locations" element={<CustomerLocationsPage />} />
               <Route path="more" element={<CustomerMorePage />} />
+              <Route path="settings" element={<CustomerMorePage />} />
             </Route>
 
             {/* Rozhraní pro baristu (/scanner) – pouze role staff a admin */}
